@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -38,13 +38,14 @@ mysql_clustercheck_port: "{{ FND_MDB.vars.mysql_clustercheck_port }}"
 mysql_log_dir: /var/log/mysql
 # Section  [client]
 mysql_client_port: "{{ FND_MDB.members.private[0].port }}"
-mysql_client_socket:  /var/run/mysqld/mysqld.sock
+mysql_client_socket: /var/run/mysqld/mysqld.sock
 # Section [mysqld_safe]
 mysql_safe_socket: /var/run/mysqld/mysqld.sock
 mysql_nice: 0
 # Section [mysqld]
 mysql_user: mysql
 mysql_pid_file: /var/run/mysqld/mysqld.pid
+mysql_socket: /var/run/mysqld/mysqld.sock
 mysql_server_socket: /var/run/mysqld/mysqld.sock
 mysql_server_port: "{{ host.bind['FND_MDB'].internal.port }}"
 mysql_basedir: /usr
@@ -81,7 +82,7 @@ mysql_wsrep_sst_method: xtrabackup-v2
 # authentication for SST method
 mysql_wsrep_sst_auth: "{{ FND_MDB.vars.mysql_sst_user ~ ':' ~ ( FND_MDB.vars.mysql_sst_password | quote ) }}"
 
-mysql_consumed_by: "{{ FND_MDB.consumed_by | default({})}}"
+mysql_consumed_by: "{{ FND_MDB.consumed_by | default({}) }}"
 mysql_accounts: "[ {% for component in mysql_consumed_by -%} {% if component.vars.accounts is defined -%} {% for account in component.vars.accounts -%} {% for grant in component.vars.accounts[account].grants -%} {{ component.vars.accounts[account] | to_json }} {%- if not loop.last -%} , {% endif -%} {% endfor -%} {%- if not loop.last -%} , {% endif -%} {% endfor -%} {% endif -%} {%- if not loop.last -%} , {% endif -%} {% endfor %} ]"
 
 mysql_grants: "[ {% for component in mysql_consumed_by -%} {% if component.vars.accounts is defined -%} {% for account in component.vars.accounts -%} {% for grant in component.vars.accounts[account].grants -%} {{ grant | to_json }} {%- if not loop.last -%} , {% endif -%} {% endfor -%} {%- if not loop.last -%} , {% endif -%} {% endfor -%} {% endif -%} {%- if not loop.last -%} , {% endif -%} {% endfor %} ]"
@@ -120,3 +121,8 @@ mysql_sst_key: "{{ mysql_server_key }}"
 mysql_tls_expiry_check: "2592000" #30 days
 mysql_certs_needs_regeneration: False
 mysql_sync_retries: 20
+
+# command to bootstrap the Galera cluster
+mysql_galera_bootstrap_command: "/etc/init.d/mysql restart-bootstrap"
+
+mysql_xinetd_mysqlchk_user: nobody

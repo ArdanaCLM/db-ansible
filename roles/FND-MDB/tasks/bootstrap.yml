@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,9 +15,21 @@
 # under the License.
 #
 ---
+# On SuSE, we need to empty the wsrep_cluster_address before bring up the
+# master node.
+- name: FND-MDB | bootstrap | Fix wsrep_cluster_address on MDB Master
+  become: yes
+  replace:
+    dest: "{{ mysql_conf_file }}"
+    regexp: '^wsrep_cluster_address = gcomm.*'
+    replace: 'wsrep_cluster_address = gcomm://'
+    backup: yes
+  when: ansible_os_family == 'Suse'
+  run_once_per: verb_hosts.FND_MDB
+
 - name: FND-MDB | bootstrap | Bootstrap MDB Master
   become: yes
-  command: '/etc/init.d/mysql restart-bootstrap'
+  command: "{{ mysql_galera_bootstrap_command }}"
   register: mysql_bootstrap_result
   run_once_per: verb_hosts.FND_MDB
   when: not (mysql_bootstrapped | bool)
@@ -25,9 +37,8 @@
 - name: FND-MDB | bootstrap | Make sure MDB Master started
   become: yes
   service:
-    name: "{{ item }}"
+    name: "{{ mysql_service }}"
     state: started
-  with_items: mysql
   when: (mysql_bootstrapped | bool)
   run_once_per: verb_hosts.FND_MDB
 
@@ -60,6 +71,7 @@
     state: restarted
   with_items: mysql
   run_once_per: verb_hosts.FND_MDB
+  when: ansible_os_family != 'Suse'
 
 - name: FND-MDB | bootstrap | Wait for MDB master
   wait_for:
@@ -67,6 +79,7 @@
     port: "{{ mysql_server_port }}"
     timeout: 30
   run_once_per: verb_hosts.FND_MDB
+  when: ansible_os_family != 'Suse'
 
 # Check here to see if database is really up
 # For now don't fail here but try to keep going if some nodes not up
@@ -80,3 +93,4 @@
   retries: 10
   delay: 4
   ignore_errors: yes
+  run_once_per: verb_hosts.FND_MDB

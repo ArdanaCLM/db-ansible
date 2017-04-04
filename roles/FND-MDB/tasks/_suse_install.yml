@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,14 +15,24 @@
 # under the License.
 #
 ---
-- include: _configure_tls.yml
-  when: mysql_bind_tls | bool
+- name: FND-MDB | _suse_install | Print latest available version
+  debug:
+    msg: "mariadb_latest_avail_version {{ mariadb_latest_avail_version }}"
 
-- name: FND-MDB | configure_tls_replication | Copy my.cnf
+- name: FND-MDB | _suse_install | Install MDB packages
   become: yes
-  template:
-    src: etc/mysql/my.cnf.j2
-    dest: "{{ mysql_conf_file }}"
-    owner: mysql
-    group: mysql
-    mode: 0600
+  zypper:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - mariadb
+    - galera-3-wsrep-provider
+    - mariadb-tools
+    - xtrabackup
+    - socat
+    - ruby2.1-rubygem-mysql2
+    - mariadb-client
+    - python-mysql
+    - python-PyMySQL
+    - xinetd
+  register: _suse_packages_installed_result

@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,6 +15,13 @@
 # under the License.
 #
 ---
+- name: FND-MDB | _configure_tls | create cert directory
+  become: yes
+  file:
+    path: "{{ mysql_cert_deploy_dir }}"
+    state: directory
+    mode: 0755
+
 # If we are told to regenerate all certs remove existing reqs
 - name: FND-MDB | _configure_tls | remove mysql cert requests
   become: yes
@@ -68,6 +75,6 @@
     owner: mysql
     group: mysql
     mode: 0400
-  with_items: "{{ _mysql_cert_request_update_result.results }}"
-  when: (item.changed | bool)
+  with_items: "{{ _mysql_cert_request_update_result.results | default([]) }}"
+  when: item.changed | bool
   register: ardana_notify_mysql_restart_required

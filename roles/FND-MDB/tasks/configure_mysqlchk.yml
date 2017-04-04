@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -19,40 +19,25 @@
   set_fact:
     creds: "{{ mysql_clustercheck_user }} {{ mysql_clustercheck_pwd }}"
 
-- name: FND-MDB | configure_mysqlchk | Update mysqlchk with clustercheck user
+- name: FND-MDB | configure_mysqlchk | Copy clustercheck script
   become: yes
-  lineinfile:
-    dest: /etc/xinetd.d/mysqlchk
-    state: present
-    regexp: '\s*server_args\s*='
-    mode: 0600
-    insertafter: '^\s*server\s*='
-    line: '        server_args     = {{ creds }} 1'
-  notify: restart xinetd
+  copy:
+    src: usr/bin/clustercheck
+    dest: /usr/bin/clustercheck
+    owner: root
+    group: root
+    mode: 0755
 
-- name: FND-MDB | configure_mysqlchk| Update mysqlchk with clustercheck port
+- name: FND-MDB | configure_mysqlchk | Render mysqlchk xinetd file
   become: yes
-  lineinfile:
+  template:
+    src: etc/xinetd.d/mysqlchk
     dest: /etc/xinetd.d/mysqlchk
-    state: present
-    regexp: '\s*port\s*='
-    mode: 0600
-    insertafter: '^\s*socket_type\s*='
-    line: '        port            = {{ mysql_clustercheck_port }}'
-  notify: restart xinetd
-
-- name: FND-MDB | configure_mysqlchk | Update mysqlchk with bind address
-  become: yes
-  lineinfile:
-    dest: /etc/xinetd.d/mysqlchk
-    state: present
-    regexp: '\s*bind\s*='
-    mode: 0600
-    insertafter: '^\s*port\s*='
-    line: '        bind            = {{ mysql_bind_address }}'
+    owner: root
+    group: root
+    mode: 0644
   notify: restart xinetd
 
 - name: FND-MDB | configure_mysqlchk | Ensure xinetd restart
   become: yes
   meta: flush_handlers
-

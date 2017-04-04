@@ -1,0 +1,72 @@
+#
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2017 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: FND-MDB | _suse_check_install | Set MariabDB server package name
+  set_fact:
+    mariadb_server_package: mariadb
+  when: mariadb_server_package is not defined
+
+- name: FND-MDB | _suse_check_install | Search for packages
+  become: yes
+  shell:  >
+    zypper se --type package --details --match-exact
+    {{ mariadb_server_package }} 2>/dev/null |
+    grep {{ mariadb_server_package }} | sed 's/^[^|]*|//' |
+    awk '/{{ mariadb_server_package }}/{print $5}' | sort -nr
+  register: avail_versions_result
+
+- name: FND-MDB | _suse_check_install | Find version installed
+  become: yes
+  shell:  >
+    zypper se --type package --details --match-exact --installed-only
+    {{ mariadb_server_package }} 2>/dev/null |
+    awk -F" *\\\| *" '/{{ mariadb_server_package }}/{NR==1;print $4}' |
+    sort -nr
+  register: installed_versions_result
+
+- name: FND-MDB | _suse_check_install | Get latest available version
+  set_fact:
+    mariadb_latest_avail_version:
+      "{{ avail_versions_result.stdout_lines[0] }}"
+  when:
+    avail_versions_result.stdout_lines[0] is defined
+
+- name: FND-MDB | _suse_check_install | Get latest installed version
+  set_fact:
+    mariadb_latest_installed_version:
+      "{{ installed_versions_result.stdout_lines[0] }}"
+  when:
+    installed_versions_result.stdout_lines[0] is defined
+
+- name: FND-MDB | _suse_check_install | Print latest available version
+  debug:
+    msg: "mariadb_latest_avail_version {{ mariadb_latest_avail_version }}"
+  when: mariadb_latest_avail_version is defined
+
+- name: FND-MDB | _suse_check_install | Print latest installed version
+  debug:
+    msg: >
+      mariadb_latest_installed_version {{ mariadb_latest_installed_version }}
+  when: mariadb_latest_installed_version is defined
+
+# Bool will still be needed on a when to check this
+- name: FND-MDB | _suse_check_install | Check if this could be a major upgrade
+  set_fact:
+    mysql_is_major_upgrade: "{{ mariadb_latest_installed_version |
+    version_compare( mariadb_latest_avail_version , '<') }}"
+  when: mariadb_latest_installed_version is defined
+        and mariadb_latest_avail_version is defined

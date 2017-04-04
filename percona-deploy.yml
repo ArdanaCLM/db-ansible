@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -33,6 +33,15 @@
     - FND-MDB
   tasks:
     - include: roles/FND-MDB/tasks/start.yml
+
+- hosts: FND-MDB
+  max_fail_percentage: 0
+  serial: 1
+  roles:
+    - FND-MDB-lifecycle
+    - FND-MDB
+  tasks:
+    - include: roles/FND-MDB/tasks/restart_master.yml
 
 - hosts: FND-MDB
   max_fail_percentage: 0

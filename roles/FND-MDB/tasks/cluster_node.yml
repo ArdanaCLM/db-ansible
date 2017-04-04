@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -20,14 +20,14 @@
 - name: FND-MDB | cluster_node | Change provider to join cluster
   become: yes
   lineinfile:
-    dest: /etc/mysql/my.cnf
+    dest: "{{ mysql_conf_file }}"
     state: present
     regexp: "^wsrep_provider = "
-    line: "wsrep_provider =  /usr/lib/libgalera_smm.so"
+    line: "wsrep_provider =  {{ mysql_wsrep_provider }}"
 
 - name: FND-MDB | cluster_node | Set readonly to off
   become: yes
   lineinfile:
-    dest: /etc/mysql/my.cnf
+    dest: "{{ mysql_conf_file }}"
     state: absent
     regexp: "^read_only = ON"

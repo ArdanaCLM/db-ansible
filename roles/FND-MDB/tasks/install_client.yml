@@ -20,6 +20,7 @@
 
 - name: FND-MDB | install_client| check install
   include: check_install.yml
+  when: ansible_os_family == 'Debian'
 
 - name: FND-MDB | install_client| Install the percona client
   become: yes
@@ -28,3 +29,4 @@
     force: yes
   with_items:
     - percona-xtradb-cluster-client-{{ percona_latest_avail_version }}
+  when: ansible_os_family == 'Debian'

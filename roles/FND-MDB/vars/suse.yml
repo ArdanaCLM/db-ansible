@@ -1,5 +1,4 @@
 #
-# (c) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,14 +14,17 @@
 # under the License.
 #
 ---
-- include: _configure_tls.yml
-  when: mysql_bind_tls | bool
+mariadb_server_package: mariadb
+mysql_service: mysql
+mysql_binary: /usr/sbin/mysqld
 
-- name: FND-MDB | configure_tls_replication | Copy my.cnf
-  become: yes
-  template:
-    src: etc/mysql/my.cnf.j2
-    dest: "{{ mysql_conf_file }}"
-    owner: mysql
-    group: mysql
-    mode: 0600
+mysql_conf_file: /etc/my.cnf.d/server.cnf
+mysql_pid_file: /var/lib/mysql/mysqld.pid
+mysql_socket: /var/lib/mysql/mysql.sock
+mysql_wsrep_provider: /usr/lib64/galera-3/libgalera_smm.so
+mysql_ca_certs: /etc/mysql/ca-certificates.crt
+mysql_lc_messages_dir: /usr/share/mariadb
+mysql_xinetd_mysqlchk_user: mysql
+
+mysql_galera_bootstrap_command: "/usr/bin/galera_new_cluster mysql"
+mysql_galera_state_file: /var/lib/mysql/grastate.dat

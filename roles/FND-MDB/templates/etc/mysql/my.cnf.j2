@@ -1,6 +1,6 @@
 {#
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -35,14 +35,14 @@
 port = {{ mysql_client_port }}
 ssl-ca = {{ mysql_ca_certs }}
 
-socket		= {{ mysql_client_socket }}
+socket		= {{ mysql_socket }}
 
 # Here is entries for some specific programs
 # The following values assume you have at least 32M ram
 
 # This was formally known as [safe_mysqld]. Both versions are currently parsed.
 [mysqld_safe]
-socket		= {{ mysql_safe_socket }}
+socket		= {{ mysql_socket }}
 nice		= {{ mysql_nice }}
 
 [mysqld]
@@ -51,7 +51,7 @@ nice		= {{ mysql_nice }}
 #
 user		=  {{ mysql_user }}
 pid-file	=  {{ mysql_pid_file }}
-socket		=  {{ mysql_server_socket }}
+socket		=  {{ mysql_socket }}
 
 port = {{ mysql_server_port }}
 
@@ -147,6 +147,7 @@ init-connect = {{ mysql_init_connect }}
 character-set-server = {{ mysql_character_set_server }}
 
 # Galera library
+wsrep_on = ON
 wsrep_provider = {{ mysql_wsrep_provider }}
 
 # In order for Galera to work correctly binlog format should be ROW

@@ -1,0 +1,17 @@
+# default: on
+# description: mysqlchk
+service mysqlchk
+{
+        disable = no
+        flags = REUSE
+        socket_type = stream
+        port = {{ mysql_clustercheck_port }}
+        bind = {{ mysql_bind_address }}
+        wait = no
+        user = {{ mysql_xinetd_mysqlchk_user }}
+        server = /usr/bin/clustercheck
+        server_args = {{ creds }} 1
+        log_on_failure += USERID
+        only_from = 0.0.0.0/0
+        per_source = UNLIMITED
+}

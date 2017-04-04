@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,25 +17,21 @@
 ---
 - include: check_install.yml
 
-- name: FND-MDB | install | Print latest available version
-  debug:
-    msg: "percona_latest_avail_version {{ percona_latest_avail_version }}"
+- include: _debian_install.yml
+  when:
+    ansible_os_family == 'Debian' and
+    not ( mysql_is_major_upgrade | bool )
 
-- name: FND-MDB | install | Install MDB packages
-  become: yes
-  apt:
-    pkg: "{{ item }}"
-    force: yes
-  with_items:
-    - percona-xtradb-cluster-server-{{ percona_latest_avail_version }}
-    - python-mysqldb
-    - xinetd # for clustercheck
-    - curl
-  register: packages_installed_result
-  when: not ( mysql_is_major_upgrade | bool )
+- include: _suse_install.yml
+  when:
+    ansible_os_family == 'Suse' and
+    not ( mysql_is_major_upgrade | bool )
 
 - include: stop.yml
-  when: packages_installed_result.changed or ( mysql_is_major_upgrade | bool )
+  when:
+    _debian_packages_installed_result.changed or
+    _suse_packages_installed_result.changed or
+    ( mysql_is_major_upgrade | bool )
 
 - name: FND-MDB | install | Ensure restart xinetd
   become: yes
@@ -43,6 +39,6 @@
 
 - name: FND-MDB | install | Enable MDB services
   become: yes
-  command: systemctl enable {{ item }}.service
-  with_items:
-    - mysql
+  service:
+    name: "{{ mysql_service }}"
+    enabled: yes

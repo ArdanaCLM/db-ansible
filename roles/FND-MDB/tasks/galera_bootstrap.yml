@@ -1,0 +1,121 @@
+#
+# (c) Copyright 2017 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: FND-MDB | galera_bootstrap | Check mysql status
+  become: yes
+  shell: >
+    service "{{ mysql_service }}" status
+  register: mysql_service_status_result
+  ignore_errors: yes
+
+- name: FND-MDB | galera_bootstrap | Check "{{ mysql_service }}" process
+  become: yes
+  shell: >
+    ps -ef | grep "{{ mysql_binary }}" | grep -v grep
+  register: mysql_process_status_result
+  ignore_errors: yes
+
+- name: FND-MDB | galera_bootstrap | Lookup safe_to_bootstrap
+  shell: >
+    cat /var/lib/mysql/grastate.dat | grep safe_to_bootstrap |
+    awk '{print $2}'
+  register: safe_to_bootstrap_result
+
+- name: FND-MDB | galera_bootstrap | Lookup seqno
+  shell: >
+    cat /var/lib/mysql/grastate.dat | grep seqno |
+    awk '{print $2}'
+  register: seqno_result
+
+- name: FND-MDB | galera_bootstrap | Find bootstrap host
+  find_galera_mariadb_bootstrap_host:
+    hostvars: "{{ hostvars }}"
+    mdb_hosts: "{{ mysql_mdb_hosts }}"
+  register: find_bootstrap_host_result
+
+- name: FND-MDB | galera_bootstrap | Print bootstrap_host
+  debug:
+    msg: "{{ find_bootstrap_host_result.bootstrap_host }}"
+  run_once: yes
+
+- name: FND-MDB | galera_bootstrap | Print hosts_to_start
+  debug:
+    msg: "{{ find_bootstrap_host_result.hosts_to_start }}"
+  run_once: yes
+
+- name: FND-MDB | galera_bootstrap | Set wsrep_cluster_address on master
+  become: yes
+  replace:
+    dest: "{{ mysql_conf_file }}"
+    regexp: '^wsrep_cluster_address = gcomm.*'
+    replace: 'wsrep_cluster_address = gcomm://'
+  when:
+    inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
+
+- name: FND-MDB | galera_bootstrap | Update safe_to_bootstrp on master
+  become: yes
+  replace:
+    dest: "{{ mysql_galera_state_file }}"
+    regexp: '^safe_to_bootstrap: .*'
+    replace: 'safe_to_bootstrap: 1'
+  when:
+    inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
+
+- name: FND-MDB | galera_bootstrap | Re-copy my.cnf
+  become: yes
+  template:
+    src: etc/mysql/my.cnf.j2
+    dest: "{{ mysql_conf_file }}"
+    owner: mysql
+    group: mysql
+    mode: 0600
+    force: yes
+  when:
+    inventory_hostname in "{{ find_bootstrap_host_result.hosts_to_start }}"
+
+- name: FND-MDB | galera_bootstrap | Start mysql on master
+  include: galera_start_on_hosts.yml
+  vars:
+    mysql_hosts_to_start:
+      - "{{ find_bootstrap_host_result.bootstrap_host }}"
+  when:
+    inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
+
+- name: FND-MDB | galera_bootstrap | Start mysql on non-master
+  include: galera_start_on_hosts.yml
+  vars:
+    mysql_hosts_to_start: "{{ find_bootstrap_host_result.hosts_to_start }}"
+
+- name: FND-MDB | galera_bootstrap | Restore wsrep_cluster_address on master
+  become: yes
+  template:
+    src: etc/mysql/my.cnf.j2
+    dest: "{{ mysql_conf_file }}"
+    owner: mysql
+    group: mysql
+    mode: 0600
+    force: yes
+  when:
+    inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
+
+- name: FND-MDB | galera_bootstrap | Restart master node to join cluster
+  include: galera_start_on_hosts.yml
+  vars:
+    mysql_start_state: "restarted"
+    mysql_hosts_to_start:
+      - "{{ find_bootstrap_host_result.bootstrap_host }}"
+  when:
+    inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"

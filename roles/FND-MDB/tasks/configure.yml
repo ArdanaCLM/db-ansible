@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -28,7 +28,7 @@
   become: yes
   template:
     src: etc/mysql/my.cnf.j2
-    dest: /etc/mysql/my.cnf
+    dest: "{{ mysql_conf_file }}"
     owner: mysql
     group: mysql
     mode: 0600
@@ -109,46 +109,41 @@
     mode: 0644
 
 # On an add node the password may already be set so ignore errors here
+# NOTE(gyee): login_unix_socket must be specified for local connection
 - name: FND-MDB | configure | Set MDB root password
   become: yes
   mysql_user:
     name: root
     password: "{{ mysql_root_pwd }}"
+    login_unix_socket: "{{ mysql_socket }}"
   run_once_per: verb_hosts.FND_MDB
   failed_when: false
 
-# store root password so the previous task does not fail on subsequent runs
-- name: FND-MDB | configure | Store MDB root password
-  become: yes
-  template:
-    src: home/.my.cnf
-    dest: ~/
-    owner: root
-    group: root
-    mode: 0600
+- name: FND-MDB | install | Write .my.cnf file
+  include: _write_home_mycnf.yml
+  vars:
+    _mysql_root_pwd: "{{ mysql_root_pwd }}"
 
 - name: FND-MDB | configure | Create SST user
   become: yes
   mysql_user:
-    login_user: root
-    login_password: "{{ mysql_root_pwd }}"
     name: "{{ mysql_sst_user }}"
     password: "{{ mysql_sst_pwd }}"
     host: localhost
     priv: "*.*:RELOAD,LOCK TABLES,REPLICATION CLIENT"
+    login_unix_socket: "{{ mysql_socket }}"
     state: present
   run_once_per: verb_hosts.FND_MDB
 
 - name: FND-MDB | configure | Create clustercheck user
   become: yes
   mysql_user:
-    login_user: "{{ mysql_root_user }}"
-    login_password: "{{ mysql_root_pwd }}"
     name: "{{ mysql_clustercheck_user }}"
     password: "{{ mysql_clustercheck_pwd }}"
     host: 'localhost'
     priv: "*.*:USAGE"
     state: present
+    login_unix_socket: "{{ mysql_socket }}"
   run_once_per: verb_hosts.FND_MDB
 
 - name: FND-MDB | configure | Update services with mysql status service
@@ -190,6 +185,7 @@
     regexp: 'password(.*)'
     replace: 'password = {{ mysql_root_pwd }}'
   no_log: true
+  when: ansible_os_family == 'Debian'
 
 - name: FND-MDB | configure | Change password for debian-sys-maint
   become: yes
@@ -198,3 +194,4 @@
     mysql --execute="SET PASSWORD FOR 'debian-sys-maint'@'localhost' =
     PASSWORD('"{{ mysql_root_pwd }}"');flush privileges;"
   run_once_per: verb_hosts.FND_MDB
+  when: ansible_os_family == 'Debian'

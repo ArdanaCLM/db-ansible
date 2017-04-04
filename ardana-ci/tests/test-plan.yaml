@@ -51,7 +51,7 @@
   logfile: testsuite-upgrade.log
   prefix: change-apt-repo
   exec:
-    - copy.bash change-repo.yml repo=hos3.0_beta-1
+    - copy.bash change-repo.yml repo=hos3.0_beta-2
 
 - name: test major pre upgrade
   logfile: testsuite-upgrade.log

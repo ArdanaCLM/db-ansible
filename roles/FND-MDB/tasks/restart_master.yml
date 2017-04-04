@@ -1,0 +1,56 @@
+#
+# (c) Copyright 2017 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2017 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Start mysql on these nodes. Note if the whole cluster is down
+# this will not start as a boostrap will need to run on one node
+#
+---
+- name: FND-MDB | restart_master | Restore wsrep_cluster_address
+  become: yes
+  template:
+    src: etc/mysql/my.cnf.j2
+    dest: "{{ mysql_conf_file }}"
+    owner: mysql
+    group: mysql
+    mode: 0600
+    force: yes
+  run_once_per: verb_hosts.FND_MDB
+  when: ansible_os_family == 'Suse'
+
+- name: FND-MDB | restart_master | Restart MDB Master
+  become: yes
+  service:
+    name: "{{ mysql_service }}"
+    state: restarted
+  run_once_per: verb_hosts.FND_MDB
+  when: ansible_os_family == 'Suse'
+
+# For now try to keep going if we are not fully synced.
+# Curl is used here instead of wait_for due to
+# https://github.com/ansible/ansible/issues/12305
+- name: FND-MDB | restart_master | Wait for percona to sync
+  shell: >
+    curl --head --silent
+    "http://{{ mysql_bind_address ~ ':' ~ mysql_clustercheck_port }}/"
+  register: mysql_restart_sync_result
+  until: mysql_restart_sync_result.stdout.find("200 OK") != -1
+  retries: "{{ mysql_sync_retries }}"
+  delay: 4
+  ignore_errors: yes
+  run_once_per: verb_hosts.FND_MDB
+  tags:
+  - skip_ansible_lint
+  when: ansible_os_family == 'Suse'
