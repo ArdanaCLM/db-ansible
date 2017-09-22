@@ -1,0 +1,429 @@
+#
+# (c) Copyright 2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2017 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+
+# note: aptitude is not installed at this point and is installed as part of these tests
+- name: remove-mysql
+  logfile: testsuite-remove.log
+  prefix: remove
+  playbooks:
+    - percona-remove.yml -e automate=true
+
+- name: remove apt repos
+  logfile: testsuite-remove.log
+  prefix: remove
+  exec:
+    - copy.bash remove-sources.list.yml
+
+- name: update apt repo
+  logfile: testsuite-upgrade.log
+  prefix: remove
+  exec:
+    - copy.bash change-repo.yml repo=hos2.1.6_ga-0
+
+- name: deploy percona 5.5
+  logfile: testsuite-upgrade.log
+  prefix: deploy-5.5
+  playbooks:
+    - percona-deploy.yml
+
+- name: create-test-data
+  logfile: testsuite-remove.log
+  prefix: remove
+  exec:
+    - copy.bash create-test-data.yml
+##
+- name: change apt-repo
+  logfile: testsuite-upgrade.log
+  prefix: change-apt-repo
+  exec:
+    - copy.bash change-repo.yml repo=hos3.0_beta-1
+
+- name: test major pre upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-pre-upgrade.yml
+
+- name: test major upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-upgrade.yml --limit *cp1*
+
+- name: test mysql version
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  exec:
+    - validate-upgrade.bash 5.6.27-25.13-1.jessie
+
+- name: test major upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-upgrade.yml
+
+- name: test major post upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-post-upgrade.yml
+
+- name: check-tables
+  logfile: testsuite-remove.log
+  prefix: remove
+  exec:
+    - copy.bash check-tables.yml
+
+- name: change apt-repo
+  logfile: testsuite-upgrade.log
+  prefix: change-apt-repo
+  exec:
+    - copy.bash change-repo.yml repo=hos4.0_beta1
+
+- name: test major pre upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-pre-upgrade.yml
+
+- name: test minor upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-upgrade.yml --limit *cp1*
+
+- name: test mysql version
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  exec:
+    - validate-upgrade.bash 5.6.28-25.14-1+hpelinux2
+
+- name: test minor upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-upgrade.yml
+
+- name: Test no op upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-upgrade.yml
+
+- name: test minor post upgrade
+  logfile: testsuite-upgrade.log
+  prefix: upgrade
+  playbooks:
+    - percona-post-upgrade.yml
+
+- name: check-tables
+  logfile: testsuite-remove.log
+  prefix: remove
+  exec:
+    - copy.bash check-tables.yml
+
+# Singleton Tests
+
+# Test Normal Stop  (one node)
+- name: Test stop one percona on singleton Cluster
+  logfile: testsuite-stop.log
+  prefix: stop-percona
+  playbooks:
+    - percona-stop.yml --limit=project-cp1-c0-m1-mgmt
+
+# Test Normal Start  (one node) - commented out until https://review.hpcloud.net/#/c/117842 (TBD)
+#- name: Test start one node
+#  logfile: testsuite-start.log
+#  prefix: start
+#  playbooks:
+#    - percona-start.yml --limit=project-cp1-c0-m1-mgmt
+#  exit_status:2
+
+# Test Percona Still down as bootstrap required until autombootstrap in (TBD)
+- name: Validate percona Down
+  logfile: testsuite-stop.log
+  prefix: validate-percona-down
+  exec:
+    - validate-percona-down.bash
+
+# Test Bootstrap  (one node) - commented out until auto-bootstrap has force flag as currently interactive (TBD)
+#- name: Test start one node
+#  logfile: testsuite-start.log
+#  prefix: start
+#  playbooks:
+#    - percona-bootstrap.yml --limit=project-cp1-c0-m1-mgmt
+
+# Remove when we have a forceflag (TBD)
+- name: Bootstrap (workaround for no forceflag on percona-bootstrap)
+  prefix: percona-bootstrap-in-test
+  logfile: testsuite-stop.log
+  exec:
+    - bootstrap-test.bash project-cp1-c0-m1-mgmt
+
+- name: Validate percona Up
+  logfile: testsuite-stop.log
+  prefix: validate-percona-up
+  exec:
+    - validate-percona-up.bash
+
+- name: Test stop one percona on Multi-Node Cluster
+  logfile: testsuite-stop.log
+  prefix: stop-percona-one
+  playbooks:
+    - percona-stop.yml --limit=project-cp2-c1-m1-mgmt
+
+- name: Test start one percona on Multi-Node Cluster
+  logfile: testsuite-stop.log
+  prefix: start-percona-one
+  playbooks:
+    - percona-start.yml --limit=project-cp2-c1-m1-mgmt
+
+- name: Validate percona Up
+  logfile: testsuite-stop.log
+  prefix: validate-percona-up
+  exec:
+    - validate-percona-up.bash
+
+# Test Noop Reconfigure
+- name: Test Noop reconfigure
+  logfile: testsuite-reconfigure-noop.log
+  prefix: testsuite-reconfigure-noop
+  playbooks:
+    - percona-reconfigure.yml
+
+# Test percona is up - This should test that percona has not restarted (TBD)
+- name: Validate percona
+  logfile: testsuite-reconfigure-noop.log
+  prefix: validate-percona
+  exec:
+    - validate-percona-up.bash
+
+- name: Update conf file change
+  logfile: testsuite-reconfigure-conf-change.log
+  prefix: update-conf-all
+  exec:
+    - update-conf.bash 's/slow_query_log          = 0/slow_query_log          = 1/g' ./percona/my.cfg.j2
+
+- name: Test reconfigure conf file change
+  logfile: testsuite-reconfigure-conf-change.log
+  prefix: reconfigure-conf-all
+  playbooks:
+    - percona-reconfigure.yml
+
+- name: Test Conf File change
+  logfile: testsuite-reconfigure-conf-change.log
+  prefix: test-mysql-conf
+  exec:
+    - test-mysql-conf.bash  cp1 slow_query_log ON
+
+- name: Update conf file change for limit test
+  logfile: testsuite-reconfigure-conf-change-limit.log
+  prefix: update-conf-limited
+  exec:
+    - update-conf.bash 's/slow_query_log          = 1/slow_query_log          = 0/g' ./percona/my.cfg.j2
+
+- name: Test reconfigure conf Limit to Single Control Plane
+  logfile: testsuite-reconfigure-conf-change-limit.log
+  prefix: reconfigure-conf-limited
+  playbooks:
+    - percona-reconfigure.yml  --limit=*cp1*
+
+# Currently exec only runs on the deployer so the second exec cannot
+# actually check the state of cp2 here . TBD checking how we fix this.
+- name: Test Conf File change
+  logfile: testsuite-reconfigure-conf-change-limit.log
+  prefix: test-conf-limited
+  exec:
+    -  test-mysql-conf.bash cp1 slow_query_log OFF
+    -  test-mysql-conf.bash cp2 slow_query_log ON
+
+- name: Test - Reset to original of slow_query_log=0
+  logfile: testsuite-reconfigure-conf-change-limit.log
+  prefix: reconfigure-conf-limited
+  playbooks:
+    - percona-reconfigure.yml
+
+- name: Update password  for single control plane
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: update-pwd
+  exec:
+    - update-pwd.bash ~/ardana-ci-tests/pwd_change_cp1.yml
+
+- name: Test reconfigure password change
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: reconfigure-password-change
+  playbooks:
+    - percona-reconfigure.yml
+
+- name: Test Password Change Result - Access to mysql
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: test-conf-limited
+  exec:
+    - validate-percona-up.bash
+
+- name: Test Pasword change Result - Password on control planes
+  logfile: testsuite-reconfigure-conf-change.log
+  prefix: test-conf-limited
+  exec:
+    -  test-conf.bash cp1 mynewpassword ~root/.my.cnf
+
+- name: Update password  for all control planes
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: update-pwd
+  exec:
+    - update-pwd.bash ~/ardana-ci-tests/pwd_change_cp1.yml
+    - update-pwd.bash ~/ardana-ci-tests/pwd_change_cp2.yml
+
+- name: Test reconfigure password change
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: reconfigure-password-change-all
+  playbooks:
+    - percona-reconfigure.yml
+
+- name: Test Password change Result - Access to mysql
+  logfile: testsuite-reconfigure-pwd-change.log
+  prefix: test-conf-limited
+  exec:
+    - validate-percona-up.bash
+
+# Currently exec only runs this on the deplouyer so this does not really
+# check cp2
+- name: Test Password change Result - Password on control planes
+  logfile: testsuite-reconfigure-conf-change.log
+  prefix: test-conf-limited
+  exec:
+    - test-conf.bash cp  mynewpassword ~root/.my.cnf
+
+# Reboot Tests - Single Host reboots  TBD check if test harness has
+# long enough sleep as next test failing occassionally without sleep
+- name: Test reboot server2
+  logfile: reboot.log
+  prefix: reboot-server2
+  vms:
+    - reboot: server2
+
+- name: Test reboot server2
+  logfile: reboot.log
+  prefix: sleep-for-1
+  exec:
+    - sleep 60
+
+- name: Test we are up
+  logfile: reboot.log
+  prefix: validate-percona-up
+  exec:
+    - validate-percona-up.bash
+
+- name: Test reboot server3
+  logfile: reboot.log
+  prefix: reboot-server3
+  vms:
+    - reboot: server3
+
+- name: Test reboot server3
+  logfile: reboot.log
+  prefix: sleep-for-1
+  exec:
+    - sleep 60
+
+- name: Test we are up
+  logfile: reboot.log
+  prefix: validate-percona-up
+  exec:
+    - validate-percona-up.bash
+
+- name: Test reboot  - Singleton, required reboot
+  logfile: reboot.log
+  prefix: reboot-singleton
+  vms:
+    - reboot: server1
+
+- name: Test reboot server1
+  logfile: reboot.log
+  prefix: sleep-for-1
+  exec:
+    - sleep 60
+
+- name: Test we are up
+  logfile: reboot.log
+  prefix: validate-percona-down
+  exec:
+    - validate-percona-down.bash
+
+- name: Bootstrap (workaround for no forceflag on percona-bootstrap)
+  logfile: reboot.log
+  prefix: bootstrap-singleton
+  exec:
+    - bootstrap-test.bash project-cp1-c0-m1-mgmt
+
+- name: Test
+  logfile: reboot.log
+  prefix: validate-singleton
+  exec:
+    - validate-percona-up.bash
+# Test node replacement procedure
+- name: percona-deploy
+  logfile: remove-nodes.log
+  prefix: deploy-percona
+  playbooks:
+    - percona-remove.yml --limit=project-cp2-c1-m3-mgmt -e automate=true
+
+- name: remove-nodes
+  logfile: remove.log
+  prefix: remove-nodes
+  exec:
+    - remove-node-test.bash server4 SERVER4-ROLE cluster1
+
+- name: run-cp
+  logfile: remove.log
+  prefix: run-cp
+  exec:
+    - run-cp.bash
+
+- name: add-nodes
+  logfile: add.log
+  prefix: add-nodes
+  exec:
+    - add-node-test.bash server4 192.168.110.6 SERVER4-ROLE RACK3 9a:9e:64:55:43:67 192.168.109.5 cluster1
+
+- name: run-cp
+  logfile: remove.log
+  prefix: run-cp
+  exec:
+    - run-cp.bash
+
+- name: percona-deploy
+  logfile: remove-nodes.log
+  prefix: deploy-percona
+  playbooks:
+    - percona-deploy.yml --limit=project-cp2-c1-m3-mgmt
+
+- name: check remove node
+  logfile: remove.log
+  prefix: remove-nodes
+  exec:
+    - copy.bash check-cluster-size.yml --limit=project-cp2-c1-m1-mgmt cluster_size=3
+
+- name: delete-test-data
+  logfile: testsuite-remove.log
+  prefix: clear-test-data
+  exec:
+    - copy.bash remove-test-data.yml
+# TBD - lots more tests to be done, would be useful
+# to be able to add upgrade in here e.g.
+# Test configure Monasca

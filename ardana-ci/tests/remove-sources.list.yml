@@ -1,0 +1,6 @@
+---
+- hosts: FND-MDB
+  tasks:
+  - name: delete sources.list
+    become: yes
+    shell: rm -f /etc/apt/sources.list.d/*

@@ -1,0 +1,20 @@
+---
+- hosts: FND-MDB
+  tasks:
+  - name: create 192_168_10_3_79_ardana_hlinux.list
+    become: yes
+    file:
+      path: /etc/apt/sources.list.d/192_168_10_3_79_ardana_hlinux.list
+      state: touch
+
+  - name: change apt-repo
+    become: yes
+    lineinfile:
+      dest: /etc/apt/sources.list.d/192_168_10_3_79_ardana_hlinux.list
+      line: "deb [arch=amd64] http://apt.suse.provo.cloud/apt/hlinux-deejay.us.rdlabs.hpecorp.net/hLinuxArchive/2016/{{ repo }} cattleprod main contrib non-free"
+
+  - name: install aptitude
+    become: yes
+    apt:
+      name: aptitude
+      update_cache: yes
