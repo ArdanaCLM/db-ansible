@@ -41,7 +41,7 @@
 # For now try to keep going if we are not fully synced.
 # Curl is used here instead of wait_for due to
 # https://github.com/ansible/ansible/issues/12305
-- name: FND-MDB | restart_master | Wait for percona to sync
+- name: FND-MDB | restart_master | Wait for cluster to sync
   shell: >
     curl --head --silent
     "http://{{ mysql_bind_address ~ ':' ~ mysql_clustercheck_port }}/"

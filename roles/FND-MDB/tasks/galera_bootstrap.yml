@@ -65,7 +65,7 @@
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
 
-- name: FND-MDB | galera_bootstrap | Update safe_to_bootstrp on master
+- name: FND-MDB | galera_bootstrap | Update safe_to_bootstrap on master
   become: yes
   replace:
     dest: "{{ mysql_galera_state_file }}"
