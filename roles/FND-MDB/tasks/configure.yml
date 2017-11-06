@@ -51,7 +51,8 @@
 
 - name: FND-MDB | configure | list backup logfiles
   become: yes
-  shell: find /var/lib/ -name "*.ardanabck*"
+  shell: find /var/lib/ -name "*.ardanabck*" 2>/dev/null
+  ignore_errors: yes
   register: old_logs_result
   when: not checkinitialise_result.stat.exists
 
