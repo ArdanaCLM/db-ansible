@@ -44,6 +44,9 @@ socket		= {{ mysql_socket }}
 [mysqld_safe]
 socket		= {{ mysql_socket }}
 nice		= {{ mysql_nice }}
+# make sure we have enough open files so we do run into
+# Resource Temporarily Unavailable error
+open_files_limit	= {{ mysql_open_files_limit }}
 
 [mysqld]
 #
@@ -81,6 +84,9 @@ myisam-recover         = {{ mysql_myisam_recover }}
 max_connections        = 8000
 # Increase the number of connect_errors from the default of 100
 max_connect_errors      = 1000
+# make sure we have enough open files so we do run into
+# Resource Temporarily Unavailable error
+open_files_limit	= {{ mysql_open_files_limit }}
 # Enable diagnostics on a per user basis
 userstat                = 1
 #table_cache            = 64
@@ -189,6 +195,7 @@ wsrep_sst_auth = {{ mysql_wsrep_sst_auth }}
 
 {% if mysql_sst_bind_tls | bool %}
 # TLS sst listener
+
 [sst]
 encrypt=3
 tkey={{ mysql_sst_key }}

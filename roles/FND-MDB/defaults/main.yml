@@ -126,3 +126,5 @@ mysql_sync_retries: 20
 mysql_galera_bootstrap_command: "/etc/init.d/mysql restart-bootstrap"
 
 mysql_xinetd_mysqlchk_user: nobody
+
+mysql_open_files_limit: 65536
