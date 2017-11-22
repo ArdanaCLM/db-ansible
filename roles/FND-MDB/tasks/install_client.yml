@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2016-2017 Hewlett Packard Enterprise Development LP
 # (c) Copyright 2017 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -20,7 +20,6 @@
 
 - name: FND-MDB | install_client| check install
   include: check_install.yml
-  when: ansible_os_family == 'Debian'
 
 - name: FND-MDB | install_client| Install the percona client
   become: yes
@@ -30,3 +29,11 @@
   with_items:
     - percona-xtradb-cluster-client-{{ percona_latest_avail_version }}
   when: ansible_os_family == 'Debian'
+
+- name: FND-MDB | install_client| Install MariaDB client
+  become: yes
+  zypper:
+    name: "{{ item }}"
+  with_items:
+    - mariadb-client-{{ mariadb_latest_avail_version }}
+  when: ansible_os_family == 'Suse'
