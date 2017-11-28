@@ -28,7 +28,7 @@
     mode: 0600
     force: yes
   run_once_per: verb_hosts.FND_MDB
-  when: ansible_os_family == 'Suse'
+  when: ansible_os_family == 'Suse' and mysql_mdb_cluster_size | int  > 1
 
 - name: FND-MDB | restart_master | Restart MDB Master
   become: yes
@@ -36,7 +36,7 @@
     name: "{{ mysql_service }}"
     state: restarted
   run_once_per: verb_hosts.FND_MDB
-  when: ansible_os_family == 'Suse'
+  when: ansible_os_family == 'Suse' and mysql_mdb_cluster_size | int  > 1
 
 # For now try to keep going if we are not fully synced.
 # Curl is used here instead of wait_for due to
@@ -53,4 +53,4 @@
   run_once_per: verb_hosts.FND_MDB
   tags:
   - skip_ansible_lint
-  when: ansible_os_family == 'Suse'
+  when: ansible_os_family == 'Suse' and mysql_mdb_cluster_size | int  > 1

@@ -76,6 +76,8 @@ mysql_gmcast_port: "{{ host.bind['FND_MDB'].mysql_gcomms.port }}"
 
 mysql_mdb_servers: "{{ FND_MDB.members.mysql_gcomms }}"
 mysql_mdb_hosts: "{{ groups[verb_hosts.FND_MDB] }}"
+mysql_mdb_cluster_size: "{{ mysql_mdb_hosts | length }}"
+
 # SST method
 mysql_wsrep_sst_method: xtrabackup-v2
 
