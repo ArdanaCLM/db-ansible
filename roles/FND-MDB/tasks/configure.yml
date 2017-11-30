@@ -34,6 +34,16 @@
     mode: 0600
   register: ardana_notify_mysql_restart_required
 
+- name: FND-MDB | configure | Install client configuration file
+  become: yes
+  template:
+    src: etc/mysql/client.cnf.j2
+    dest: /etc/my.cnf.d/client.cnf
+    owner: mysql
+    group: mysql
+    mode: 0644
+  when: ansible_os_family == 'Suse'
+
 - name: FND-MDB | configure | Check initialised
   become: yes
   stat:
