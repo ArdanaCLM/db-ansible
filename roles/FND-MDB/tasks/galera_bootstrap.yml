@@ -29,12 +29,14 @@
   ignore_errors: yes
 
 - name: FND-MDB | galera_bootstrap | Lookup safe_to_bootstrap
+  become: yes
   shell: >
     cat /var/lib/mysql/grastate.dat | grep safe_to_bootstrap |
     awk '{print $2}'
   register: safe_to_bootstrap_result
 
 - name: FND-MDB | galera_bootstrap | Lookup seqno
+  become: yes
   shell: >
     cat /var/lib/mysql/grastate.dat | grep seqno |
     awk '{print $2}'
