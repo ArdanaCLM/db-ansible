@@ -74,7 +74,7 @@
 - name: FND-MDB | start | Check if singlenode setup
   become: yes
   command: >
-    grep -qE '^wsrep_cluster_address = gcomm://{{ ansible_fqdn }}$'
+    grep -qE '^wsrep_cluster_address = gcomm://{{ mysql_mdb_servers[0].host }}$'
     "{{ mysql_conf_file }}"
   ignore_errors: True
   register: is_singleton_result
