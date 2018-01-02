@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -17,7 +17,7 @@
 ---
 # Purge old major packages if they are there
 
-- name: FND-MDB | remove_packages | Remove Percona packages
+- name: FND-MDB | remove_packages | Remove Percona Debian packages
   become: yes
   apt:
     name:  "{{ item }}"
@@ -28,11 +28,12 @@
   with_items:
     - percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
     - percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
+  when: ansible_os_family | lower == 'debian'
   register: packages_removed_result
 
 # Autoremove dependent packages (Not yet supported by the apt module)
 #  https://github.com/ansible/ansible-modules-core/issues/1976
-- name: FND-MDB | remove_packages | Remove Dependent Percona packages
+- name: FND-MDB | remove_packages | Remove Dependent Percona Debian packages
   become: yes
   shell: >
     /usr/bin/apt-get --yes autoremove
@@ -41,5 +42,18 @@
   environment:
     DEBIAN_FRONTEND: noninteractive
   register: dependent_packages_removed_result
+  when: ansible_os_family | lower == 'debian'
+  tags:
+    - skip_ansible_lint
+
+- name: FND-MDB | remove_packages | Remove Maria db and its dependent Suse
+        packages
+  become: yes
+  shell: >
+    zypper remove --non-interactive --clean-deps
+    mariadb galera-3-wsrep-provider mariadb-tools ruby2.1-rubygem-mysql2
+    mariadb-client
+  register: packages_removed_result
+  when: ansible_os_family | lower == 'suse'
   tags:
     - skip_ansible_lint

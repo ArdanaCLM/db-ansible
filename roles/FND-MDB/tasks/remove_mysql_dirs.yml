@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -15,7 +15,7 @@
 # under the License.
 #
 ---
-- name: FND-MDB | remove_mysql_dirs | Remove Percona packages
+- name: FND-MDB | remove_mysql_dirs | Remove Percona Debian packages
   become: yes
   apt:
     name: mysql-common
@@ -23,6 +23,7 @@
     state: absent
     purge: yes
     force: yes
+  when: ansible_os_family | lower == 'debian'
 
 # Until file supports recursive remove we need to use rm -rf
 - name: FND-MDB | remove_mysql_dirs | remove /var/lib/mysql
