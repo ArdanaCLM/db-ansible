@@ -20,12 +20,21 @@
     msg: "Running service check for {{ mysql_service }}"
   run_once_per: verb_hosts.FND_MDB
 
-- name: FND-MDB | status | Check system service running
+- name: FND-MDB | status | Check system service running (Debian)
   become: yes
   shell: "systemctl status {{ mysql_service }} && killall -0 mysqld"
   ignore_errors: yes
   changed_when: false
+  when: ansible_os_family == 'Debian'
   register: systemctl_status_result
+
+- name: FND-MDB | status | Check system service running
+  become: yes
+  shell: "systemctl status {{ mysql_service }}"
+  ignore_errors: yes
+  changed_when: false
+  register: systemctl_status_result
+  when: ansible_os_family != 'Debian'
 
 - name: FND-MDB | status | Report status of "{{ mysql_service }}"
   fail:

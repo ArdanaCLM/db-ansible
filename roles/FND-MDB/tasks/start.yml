@@ -23,6 +23,7 @@
   shell: "systemctl status {{ mysql_service }}"
   register: mysql_service_result
   failed_when: false
+  when: ansible_os_family == 'Debian'
   changed_when: '"active (exited)" in mysql_service_result.stdout'
 
 - name: FND-MDB | start | Check if daemon is down
@@ -30,6 +31,7 @@
   shell: "killall -0 mysqld"
   register: mysql_running_result
   failed_when: false
+  when: ansible_os_family == 'Debian'
   changed_when: '"no process found" in mysql_running_result.stderr'
 
 - name: FND-MDB | start | Stop if we are inactive (exited) and daemon is down
@@ -37,7 +39,7 @@
   service:
     name: "{{ mysql_service }}"
     state: stopped
-  when: mysql_service_result.changed and mysql_running_result.changed
+  when: ansible_os_family == 'Debian' and mysql_service_result.changed and mysql_running_result.changed
 
 - name: FND-MDB | start | Start MySQL
   become: yes
