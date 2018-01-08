@@ -39,7 +39,9 @@
   service:
     name: "{{ mysql_service }}"
     state: stopped
-  when: ansible_os_family == 'Debian' and mysql_service_result.changed and mysql_running_result.changed
+  when: ansible_os_family == 'Debian' and
+        mysql_service_result.changed and
+        mysql_running_result.changed
 
 - name: FND-MDB | start | Start MySQL
   become: yes
