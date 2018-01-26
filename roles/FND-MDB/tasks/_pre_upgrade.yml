@@ -27,9 +27,10 @@
   become: yes
   command: aptitude -y unhold  {{ item }}
   with_items:
-    percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  when: ansible_os_family | lower == 'debian'
 
 - name: FND-MDB | _pre_upgrade | _Pre_major_upgrade
   include: _pre_major_upgrade.yml
@@ -38,8 +39,4 @@
 - name: FND-MDB | _pre_upgrade | _Pre_minor_upgrade
   include: _pre_minor_upgrade.yml
   when: not (mysql_is_major_upgrade | bool)
-
-- name: FND-MDB | _pre_upgrade | Print percona latest available version
-  debug:
-    msg: "percona_latest_avail_version {{ percona_latest_avail_version }}"
 

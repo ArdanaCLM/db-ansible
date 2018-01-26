@@ -22,6 +22,7 @@
   become: yes
   command: aptitude -y unhold {{ item }}
   with_items:
-    percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  when: ansible_os_family | lower == 'debian'

@@ -33,38 +33,6 @@
   become: yes
   command: systemctl enable {{ mysql_service }}.service
 
-- name: FND-MDB | _post_upgrade | Delete MDB OpenStack service user
-  become: yes
-  mysql_user:
-    login_user: "{{ mysql_root_user }}"
-    login_password: "{{ mysql_root_pwd }}"
-    name: "openstack"
-    host: '%'
-    state: absent
-  run_once_per: verb_hosts.FND_MDB
-
-#  This is for V2->V3 upgrade.  As weve not yet provided an
-#  interface for services to remove their users/dbs we need
-#  to do this here for now.
-- name: FND-MDB | _post_upgrade | Delete Sherpa service user
-  become: yes
-  mysql_user:
-    login_user: "{{ mysql_root_user }}"
-    login_password: "{{ mysql_root_pwd }}"
-    name: "sherpa"
-    host: '%'
-    state: absent
-  run_once_per: verb_hosts.FND_MDB
-
-- name: FND-MDB | _post_upgrade | Delete Sherpa service database
-  become: yes
-  mysql_db:
-    login_user: "{{ mysql_root_user }}"
-    login_password: "{{ mysql_root_pwd }}"
-    name: "sherpa"
-    state: absent
-  run_once_per: verb_hosts.FND_MDB
-
 - name:  FND-MDB | _post_upgrade | check db tables
   become: yes
   shell: >

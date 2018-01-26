@@ -33,7 +33,13 @@
   roles:
     - FND-MDB
   tasks:
-    - include: roles/FND-MDB/tasks/install_packages.yml
+    - include: roles/FND-MDB/tasks/check_install.yml
+
+    - include: roles/FND-MDB/tasks/_debian_install.yml
+      when: ansible_os_family == 'Debian'
+
+    - include: roles/FND-MDB/tasks/_suse_install.yml
+      when: ansible_os_family == 'Suse'
 
 - hosts: FND-MDB
   max_fail_percentage: 0

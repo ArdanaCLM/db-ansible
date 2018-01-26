@@ -27,15 +27,16 @@
   become: yes
   command: aptitude -y hold {{ item }}
   with_items:
-    percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
-    percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-server-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-client-{{ percona_latest_installed_version }}
+  - percona-xtradb-cluster-common-{{ percona_latest_installed_version }}
+  when: ansible_os_family | lower == 'debian'
 
 # For V3.0.1 mv galera.initialised out of /var/lib/mysql
 - name:  FND-MDB | pre-upgrade | Check initialised anywhere
   become: yes
   stat:
-      path: "{{ mysql_initialised_deprecated }}"
+    path: "{{ mysql_initialised_deprecated }}"
   delegate_to: "{{ item }}"
   with_items: "{{ mysql_mdb_hosts }}"
   register: mysql_pre_v301_here_result
