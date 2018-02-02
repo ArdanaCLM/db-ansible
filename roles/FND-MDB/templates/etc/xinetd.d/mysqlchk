@@ -9,7 +9,7 @@ service mysqlchk
         bind = {{ mysql_bind_address }}
         wait = no
         user = {{ mysql_xinetd_mysqlchk_user }}
-        server = /usr/bin/clustercheck
+        server = /usr/local/bin/clustercheck
         server_args = {{ creds }} 1
         log_on_failure += USERID
         only_from = 0.0.0.0/0
