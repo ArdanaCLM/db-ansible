@@ -23,7 +23,7 @@
   become: yes
   copy:
     src: usr/bin/clustercheck
-    dest: /usr/bin/clustercheck
+    dest: /usr/local/bin/clustercheck
     owner: root
     group: root
     mode: 0755
