@@ -33,5 +33,6 @@
     - mariadb-client
     - python-mysql
     - python-PyMySQL
+    - which
     - xinetd
   register: _suse_packages_installed_result
