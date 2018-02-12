@@ -51,7 +51,7 @@
   become: yes
   shell: >
     zypper remove --non-interactive --clean-deps
-    mariadb galera-3-wsrep-provider mariadb-tools mariadb-client
+    mariadb galera-3-wsrep-provider mariadb-tools mariadb-galera mariadb-client
   register: packages_removed_result
   when: ansible_os_family | lower == 'suse'
   tags:

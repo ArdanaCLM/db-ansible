@@ -36,3 +36,10 @@
     - which
     - xinetd
   register: _suse_packages_installed_result
+
+- name: FND-MDB | _suse_install | Install Galera packages
+  become: yes
+  zypper:
+    name: mariadb-galera
+    state: latest
+  when: deployer_media_legacy_layout|bool == False
