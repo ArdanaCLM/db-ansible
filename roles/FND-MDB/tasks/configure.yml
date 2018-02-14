@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2015-2017 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -141,7 +141,7 @@
     name: "{{ mysql_sst_user }}"
     password: "{{ mysql_sst_pwd }}"
     host: localhost
-    priv: "*.*:RELOAD,LOCK TABLES,REPLICATION CLIENT"
+    priv: "*.*:RELOAD,LOCK TABLES,REPLICATION CLIENT,PROCESS"
     login_unix_socket: "{{ mysql_socket }}"
     state: present
   run_once_per: verb_hosts.FND_MDB

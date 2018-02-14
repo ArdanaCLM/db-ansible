@@ -50,7 +50,7 @@
         packages
   become: yes
   shell: >
-    zypper remove --non-interactive --clean-deps
+    zypper --non-interactive remove --clean-deps
     mariadb galera-3-wsrep-provider mariadb-tools mariadb-galera mariadb-client
   register: packages_removed_result
   when: ansible_os_family | lower == 'suse'
