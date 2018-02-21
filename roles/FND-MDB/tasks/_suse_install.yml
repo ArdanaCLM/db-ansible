@@ -35,11 +35,27 @@
     - python-PyMySQL
     - which
     - xinetd
+    # TODO(fergal) uncomment mariadb-galera once SCRD-2019 SLES Extras
+    # refresh changes land
+    #- mariadb-galera
   register: _suse_packages_installed_result
+
+# TODO(fergal) Workaround to install mariadb-galera if available
+# Remove once SCRD-2019 SLES Extras refresh lands
+# start of workaround
+- name: FND-MDB | _suse_install | Check for Galera packages
+  shell: |
+    set -eu
+
+    if zypper search --match-exact mariadb-galera >/dev/null 2>&1; then
+        echo "INSTALL_GALERA"
+    fi
+  register: _mariadb_galera_zypper_search_result
 
 - name: FND-MDB | _suse_install | Install Galera packages
   become: yes
   zypper:
     name: mariadb-galera
     state: latest
-  when: deployer_media_legacy_layout|bool == False
+  when: '"INSTALL_GALERA" in _mariadb_galera_zypper_search_result.stdout'
+# end of workaround
