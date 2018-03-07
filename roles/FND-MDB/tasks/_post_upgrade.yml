@@ -31,7 +31,9 @@
 
 - name: FND-MDB | _post_upgrade| Enable MDB services
   become: yes
-  command: systemctl enable {{ mysql_service }}.service
+  service:
+    name: "{{ mysql_service }}"
+    enabled: yes
 
 - name:  FND-MDB | _post_upgrade | check db tables
   become: yes
