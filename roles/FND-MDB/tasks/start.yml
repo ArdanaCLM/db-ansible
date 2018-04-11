@@ -161,3 +161,9 @@
         groups [verb_hosts.FND_MDB].index(inventory_hostname) != 0 and
         not mysql_bootstrapping
   register: mysql_restarted_result
+
+- name: FND-MDB | start | Start xinetd
+  become: yes
+  service:
+    name: xinetd
+    state: started
