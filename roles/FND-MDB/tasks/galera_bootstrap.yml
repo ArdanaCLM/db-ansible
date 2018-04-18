@@ -1,5 +1,5 @@
 #
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -31,14 +31,14 @@
 - name: FND-MDB | galera_bootstrap | Lookup safe_to_bootstrap
   become: yes
   shell: >
-    cat /var/lib/mysql/grastate.dat | grep safe_to_bootstrap |
+    cat "{{ mysql_galera_state_file }}" | grep safe_to_bootstrap |
     awk '{print $2}'
   register: safe_to_bootstrap_result
 
 - name: FND-MDB | galera_bootstrap | Lookup seqno
   become: yes
   shell: >
-    cat /var/lib/mysql/grastate.dat | grep seqno |
+    cat "{{ mysql_galera_state_file }}" | grep seqno |
     awk '{print $2}'
   register: seqno_result
 

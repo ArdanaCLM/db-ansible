@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -22,7 +22,7 @@
 
 - name: FND-MDB | _pre_major_upgrade | Backup grastate.dat
   shell: >
-    cp /var/lib/mysql/grastate.dat
+    cp "{{ mysql_galera_state_file }}"
     /var/lib/grastate.dat.ardanabck.`date +"%Y%m%d_%H:%M:%S:%N"`
   become: yes
 
@@ -31,4 +31,3 @@
 
 - name: FND-MDB | _pre_major_upgrade | decluster node
   include: decluster_node.yml
-

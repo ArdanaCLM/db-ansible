@@ -28,7 +28,7 @@
 # Until file supports recursive remove we need to use rm -rf
 - name: FND-MDB | remove_mysql_dirs | remove /var/lib/mysql
   become: yes
-  shell: rm -rf /var/lib/mysql/*
+  shell: rm -rf "{{ mysql_datadir }}"/*
   tags:
   - skip_ansible_lint
 
@@ -47,5 +47,5 @@
 - name: FND-MDB | remove_mysql_dirs | remove galera.initialised
   become: yes
   file:
-    path: /var/lib/galera.initialised
+    path: "{{ mysql_initialised }}"
     state: absent

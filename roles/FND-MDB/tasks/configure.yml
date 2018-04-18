@@ -55,8 +55,8 @@
   stat:
     path: "{{ item }}"
   with_items:
-    - /var/lib/mysql/ib_logfile0
-    - /var/lib/mysql/ib_logfile1
+    - "{{ mysql_datadir }}/ib_logfile0"
+    - "{{ mysql_datadir }}/ib_logfile1"
   register: checklogfile_result
 
 - name: FND-MDB | configure | list backup logfiles
