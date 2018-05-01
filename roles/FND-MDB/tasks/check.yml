@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -15,6 +15,15 @@
 # under the License.
 #
 ---
+- name: FND-MDB | check | Percona not used in CLM
+  fail:
+    msg: |
+        Percona Server for MySQL is not supported in CLM deployments.
+        Please check the documentation for instructions on how to bootstrap
+        the mysql cluster. Use galera-bootstrap.yml for MariaDB clusters.
+  when: ansible_os_family == 'Suse'
+
+
 - name: FND-MDB | check |
     This bootstrap procedure will WIPE all database data other
     than that on the first controller
