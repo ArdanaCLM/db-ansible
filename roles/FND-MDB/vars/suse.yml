@@ -17,6 +17,7 @@
 mariadb_server_package: mariadb
 mysql_service: mysql
 mysql_binary: /usr/sbin/mysqld
+mysql_safe_binary: /usr/bin/mysqld_safe
 
 mysql_conf_file: /etc/my.cnf.d/server.cnf
 mysql_pid_file: /run/mysql/mysqld.pid

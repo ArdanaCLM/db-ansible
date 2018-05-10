@@ -1,4 +1,19 @@
 #!/usr/bin/python
+#
+# (c) Copyright 2018 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.0',
@@ -16,14 +31,20 @@ version_added: "1.9"
 
 description:
     - This action module will analyse the result of service status,
-      safe_to_bootstrap status, and seqno to determine the best way to
-      restart the cluster. If all the nodes are down, it will figure out
-      the node in which to bootstrap the cluster. If some of the nodes are
-      down and some of them are still alive, it will simply return the list
-      of nodes to restart or rejoin the cluster. This module does not work
-      by itself. Rather, it is relying on the tasks to find the server
-      status, safe_to_boostrap attribute, and seqno attribute from each of
-      the cluster nodes. This module merely going over those results and
+      safe_to_bootstrap status, seqno, and possibly recovered position to
+      determine the best way to restart the cluster. If all the nodes are
+      down, it will figure out the node in which to bootstrap the cluster.
+      If some of the nodes are down and others are still alive, it will
+      simply return the list of nodes to restart and rejoin the cluster.
+      If all the nodes are down and we are unable to determine the boostrap
+      node from safe_to_bootstrap and seqno, we'll attempt to use the
+      recovered position to figure out the latest UUID and seqno.
+
+      This module does not work by itself. Rather, it is relying on the
+      other tasks to find the server status, safe_to_boostrap attribute,
+      seqno attribute, and possibly recovered position from each of
+      the cluster nodes. The result of the above are expected to be conveyed
+      via the host vars. This module merely going over those results and
       determine the best way to restart the cluster.
 
 options:
@@ -87,6 +108,21 @@ hosts_to_start:
                  attribute will always set. However, it may contain an empty
                  list if all the hosts in the cluster are still alive and well.
     type: list
+need_recovery:
+    description: Indicate whether we are in a situation when we must overwrite
+                 the grastate.dat file with the recovered uuid and seqno.
+                 User likely got into this situation if the cluster was not
+                 properly bootstrapped after all the nodes are down. If
+                 need_recovery is set to True. The recovered uuid and seqno
+                 are conveyed via recovered_uuid and recovered_seqno
+                 parameter respectively.
+    type: boolean
+recovered_uuid:
+    description: The recovered UUID.
+    type: str
+recovered_seqno:
+    description: The recovered seqno (last transaction ID)
+    type: str
 '''
 
 from ansible.module_utils.basic import *
@@ -130,6 +166,32 @@ def find_hosts_where_mysql_still_running(hostvars, hosts):
     return alive_hosts
 
 
+def find_latest_recovered_position(hostvars, hosts):
+    host_with_highest_seqno = None
+    highest_seqno = -1
+    highest_uuid = None
+    for host in hosts:
+        if ('recovered_position_result' in hostvars[host] and
+            hostvars[host]['recovered_position_result']['stdout'] != ''):
+            # per http://galeracluster.com/documentation-webpages/
+            # restartingcluster.html#identifying-the-most-advanced-node
+            # recovered postion is of the format: <uuid>:<seqno>
+            result = hostvars[host]['recovered_position_result']
+            (uuid, seqno) = result['stdout'].split(':', 1)
+            seqno = int(seqno)
+            if seqno > highest_seqno:
+                highest_seqno = seqno
+                highest_uuid = uuid
+                host_with_highest_seqno = host
+        else:
+            # If one or more nodes does not produce a recovered postion after
+            # the crash, that means we have a FUBAR situation which required
+            # menual recovery.
+            raise Exception('Unable to find the recovered positon on host %s. '
+                            'Manual recovery is required.', host)
+    return (host_with_highest_seqno, highest_uuid, highest_seqno)
+
+
 def run_module():
     # define the available arguments/parameters that a user can pass to
     # the module
@@ -148,6 +210,9 @@ def run_module():
         original_message='',
         message='',
         bootstrap_host=None,
+        need_recovery=False,
+        recovered_uuid=None,
+        recovered_seqno=None,
         hosts_to_start=[]
     )
 
@@ -188,8 +253,17 @@ def run_module():
                 if highest_seqno_host:
                     result['bootstrap_host'] = highest_seqno_host
                 else:
-                    raise Exception('Unable to determine a bootstrap host '
-                                    'either safe_to_boostrap or seqno')
+                    # at this point, we have to rely on the recovered position
+                    # as we can't determine the boostrap host. We'll first
+                    # find the host with the highest seqno, then override its
+                    # grastate.dat file with the recovered uuid and seqno.
+                    # This host will be bootstrapped first as the master node.
+                    (host, uuid, seqno) = find_latest_recovered_position(
+                        hostvars, hosts)
+                    result['bootstrap_host'] = host
+                    result['need_recovery'] = True
+                    result['recovered_uuid'] = uuid
+                    result['recovered_seqno'] = seqno
             result['hosts_to_start'] = list(
                 set(hosts) - set([result['bootstrap_host']]))
     except Exception, e:

@@ -28,6 +28,29 @@
   register: mysql_process_status_result
   ignore_errors: yes
 
+# NOTE(gyee): According to
+#
+# http://galeracluster.com/documentation-webpages/restartingcluster.html
+#
+# , if the node is down, we'll need to run 'mysqld_safe --wsrep_recover'
+# to recover the last transaction ID. However, if the cluster is not
+# completely down (i.e. only some nodes are down), running mysqld_safe is
+# harmless as we won't need to use the recovered transaction ID. We'll
+# simply bring up the down nodes and have them rejoin the cluster.
+- name: FND-MDB | galera_bootstrap | Generate recovered position
+  become: yes
+  shell: >
+    "{{ mysql_safe_binary }}" --wsrep_recover
+  when: mysql_process_status_result.stdout == ""
+
+- name: FND-MDB | galera_bootstrap | Look up recovered position
+  become: yes
+  shell: >
+    grep 'WSREP: Recovered position: ' "{{ mysql_log_error }}" | tail -1 |
+    sed 's/.*Recovered position: //'
+  register: recovered_position_result
+  when: mysql_process_status_result.stdout == ""
+
 - name: FND-MDB | galera_bootstrap | Lookup safe_to_bootstrap
   become: yes
   shell: >
@@ -58,6 +81,11 @@
     msg: "{{ find_bootstrap_host_result.hosts_to_start }}"
   run_once: yes
 
+- name: FND-MDB | galera_bootstrap | Print need_recovery
+  debug:
+    msg: "{{ find_bootstrap_host_result.need_recovery }}"
+  run_once: yes
+
 - name: FND-MDB | galera_bootstrap | Set wsrep_cluster_address on master
   become: yes
   replace:
@@ -66,6 +94,28 @@
     replace: 'wsrep_cluster_address = gcomm://'
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
+
+- name: FND-MDB | galera_bootstrap | Update uuid on master
+  become: yes
+  replace:
+    dest: "{{ mysql_galera_state_file }}"
+    regexp: '^uuid: .*'
+    replace: 'uuid: {{ find_bootstrap_host_result.recovered_uuid }}'
+  when:
+    (inventory_hostname ==
+      "{{ find_bootstrap_host_result.bootstrap_host }}" and
+      find_bootstrap_host_result.need_recovery)
+
+- name: FND-MDB | galera_bootstrap | Update seqno on master
+  become: yes
+  replace:
+    dest: "{{ mysql_galera_state_file }}"
+    regexp: '^seqno: .*'
+    replace: 'seqno: {{ find_bootstrap_host_result.recovered_seqno }}'
+  when:
+    (inventory_hostname ==
+      "{{ find_bootstrap_host_result.bootstrap_host }}" and
+      find_bootstrap_host_result.need_recovery)
 
 - name: FND-MDB | galera_bootstrap | Update safe_to_bootstrap on master
   become: yes
