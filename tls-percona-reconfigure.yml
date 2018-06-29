@@ -1,6 +1,6 @@
 #
 # (c) Copyright 2016 Hewlett Packard Enterprise Development LP
-# (c) Copyright 2017 SUSE LLC
+# (c) Copyright 2017-2018 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -34,17 +34,7 @@
     - FND-MDB
   tasks:
     - include: roles/FND-MDB/tasks/initialise.yml
-    - include: roles/FND-MDB/tasks/bootstrap.yml
-    - name: FND-MDB | bootstrap | Notify I am bootstrapping
-      set_fact:
-        mysql_bootstrapping: true
-
-- hosts: FND-MDB
-  serial: 1
-  roles:
-    - FND-MDB
-  tasks:
-    - include: roles/FND-MDB/tasks/start.yml
+    - include: roles/FND-MDB/tasks/galera_bootstrap.yml
 
 - hosts: FND-MDB
   roles:
