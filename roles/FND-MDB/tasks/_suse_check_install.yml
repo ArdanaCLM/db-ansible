@@ -17,7 +17,7 @@
 ---
 - name: FND-MDB | _suse_check_install | Set MariabDB server package name
   set_fact:
-    mariadb_server_package: mariadb
+    mariadb_server_package: mariadb-102
   when: mariadb_server_package is not defined
 
 - name: FND-MDB | _suse_check_install | Search for packages

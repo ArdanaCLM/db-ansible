@@ -14,7 +14,10 @@
 # under the License.
 #
 ---
-mariadb_server_package: mariadb
+# TODO(fergal): remove SLES12 SP3 workaround once fully switched to SP4
+mariadb_server_package: "{{ ((ansible_distribution == 'SLES') and
+                             (ansible_distribution_version == '12.3')) |
+                            ternary('mariadb' , 'mariadb-102') }}"
 mysql_service: mysql
 mysql_binary: /usr/sbin/mysqld
 mysql_safe_binary: /usr/bin/mysqld_safe
@@ -23,7 +26,7 @@ mysql_conf_file: /etc/my.cnf.d/server.cnf
 mysql_pid_file: /run/mysql/mysqld.pid
 mysql_socket: /run/mysql/mysql.sock
 mysql_wsrep_provider: /usr/lib64/galera-3/libgalera_smm.so
-mysql_lc_messages_dir: /usr/share/mariadb
+mysql_lc_messages_dir: "/usr/share/{{ mariadb_server_package }}"
 mysql_xinetd_mysqlchk_user: mysql
 
 mysql_galera_bootstrap_command: "/usr/bin/galera_new_cluster mysql"
