@@ -25,15 +25,15 @@
     name: "{{ item }}"
     state: latest
   with_items:
-    - "{{ mariadb_server_package }}"
+    - mariadb
     - galera-3-wsrep-provider
-    - "{{ mariadb_server_package }}-tools"
+    - mariadb-tools
     - xtrabackup
     - socat
-    - "{{ mariadb_server_package }}-client"
+    - mariadb-client
     - python-mysql
     - python-PyMySQL
     - which
     - xinetd
-    - "{{ mariadb_server_package }}-galera"
+    - mariadb-galera
   register: _suse_packages_installed_result
