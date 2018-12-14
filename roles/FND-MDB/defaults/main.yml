@@ -79,7 +79,7 @@ mysql_mdb_hosts: "{{ groups[verb_hosts.FND_MDB] }}"
 mysql_mdb_cluster_size: "{{ mysql_mdb_hosts | length }}"
 
 # SST method
-mysql_wsrep_sst_method: xtrabackup-v2
+mysql_wsrep_sst_method: mariabackup
 
 # authentication for SST method
 mysql_wsrep_sst_auth: "{{ FND_MDB.vars.mysql_sst_user ~ ':' ~ ( FND_MDB.vars.mysql_sst_password | quote ) }}"
