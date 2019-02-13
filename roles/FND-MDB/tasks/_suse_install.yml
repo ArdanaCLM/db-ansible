@@ -28,7 +28,6 @@
     - mariadb
     - galera-3-wsrep-provider
     - mariadb-tools
-    - xtrabackup
     - socat
     - mariadb-client
     - python-mysql
