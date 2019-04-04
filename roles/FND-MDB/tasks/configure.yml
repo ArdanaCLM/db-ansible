@@ -110,15 +110,6 @@
 - include: bootstrap.yml
   when: not checkinitialise_result.stat.exists
 
-- name: FND-MDB | configure | Copy logrotate file
-  become: yes
-  template:
-    src: etc/logrotate.d/mysql.j2
-    dest: /etc/logrotate.d/mysql
-    owner: root
-    group: root
-    mode: 0644
-
 # On an add node the password may already be set so ignore errors here
 # NOTE(gyee): login_unix_socket must be specified for local connection
 - name: FND-MDB | configure | Set MDB root password
