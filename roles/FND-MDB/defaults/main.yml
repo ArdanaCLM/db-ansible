@@ -65,6 +65,12 @@ mysql_binlog_format: ROW
 mysql_default_storage_engine: InnoDB
 # This changes how InnoDB autoincrement locks are managed and is a requirement for Galera
 mysql_innodb_autoinc_lock_mode: 2
+
+innodb_flush_method: fsync
+# 0 should bring better performance but has slight risk of losing some logs
+innodb_flush_log_at_trx_commit: 1
+innodb_flush_log_at_timeout: 1
+
 # cluster name
 mysql_wsrep_cluster_name: "{{ FND_MDB.vars.mysql_cluster_name }}"
 # server id
