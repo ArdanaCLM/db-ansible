@@ -175,13 +175,22 @@ innodb_flush_log_at_timeout = {{ innodb_flush_log_at_timeout }}
 
 # cluster name
 wsrep_cluster_name = {{ mysql_wsrep_cluster_name }}
-wsrep_node_address = {{ mysql_wsrep_node_address }}
+wsrep_node_address = {{ mysql_wsrep_node_address | ipwrap }}:4567
+wsrep_sst_receive_address = {{ mysql_wsrep_node_address | ipwrap }}:4444
 
 {% if mysql_gcomms_bind_tls | bool %}
 # TLS gcomms listener
+{% if mysql_gmcast_ip_is_v6|bool %}
+wsrep_provider_options = "gmcast.listen_addr=tcp://[::]:4567; ist.recv_addr=[{{ mysql_wsrep_node_address }}]:4568;socket.ssl_key={{ mysql_gcomms_key }};socket.ssl_cert={{ mysql_gcomms_cert }};socket.ssl_ca={{ mysql_ca_certs }}"
+{% else %}
 wsrep_provider_options = "gmcast.listen_addr=tcp://{{ mysql_gmcast_ip ~ ':' ~ mysql_gmcast_port }};socket.ssl_key={{ mysql_gcomms_key }};socket.ssl_cert={{ mysql_gcomms_cert }};socket.ssl_ca={{ mysql_ca_certs }}"
+{% endif %}
+{% else %}
+{% if mysql_gmcast_ip_is_v6|bool %}
+wsrep_provider_options = "gmcast.listen_addr=tcp://[::]:4567; ist.recv_addr=[{{ mysql_wsrep_node_address }}]:4568"
 {% else %}
 wsrep_provider_options = "gmcast.listen_addr=tcp://{{ mysql_gmcast_ip ~ ':' ~ mysql_gmcast_port }}"
+{% endif %}
 {% endif %}
 
 {% set cluster_addresses = [] %}
@@ -198,6 +207,9 @@ wsrep_sst_method = {{ mysql_wsrep_sst_method }}
 wsrep_sst_auth = {{ mysql_wsrep_sst_auth }}
 
 [sst]
+{% if mysql_gmcast_ip_is_v6|bool %}
+sockopt=,pf=ip6
+{% endif %}
 inno-backup-opts="--skip-ssl"
 {% if mysql_sst_bind_tls | bool %}
 # TLS sst listener
