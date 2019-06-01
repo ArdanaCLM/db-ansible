@@ -12,6 +12,6 @@ service mysqlchk
         server = /usr/local/bin/clustercheck
         server_args = {{ creds }} 1
         log_on_failure += USERID
-        only_from = 0.0.0.0/0
+        only_from = 0.0.0.0/0 ::/0
         per_source = UNLIMITED
 }
