@@ -50,7 +50,7 @@
 - name: FND-MDB | status | Check percona sync status
   shell: >
     curl --head --silent
-    "http://{{ mysql_bind_address }}:{{ mysql_clustercheck_port }}/"
+    "http://{{ mysql_bind_address | ipwrap }}:{{ mysql_clustercheck_port }}/"
   ignore_errors: yes
   register: mysql_sync_result
   tags:

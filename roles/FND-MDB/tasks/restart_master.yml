@@ -44,7 +44,7 @@
 - name: FND-MDB | restart_master | Wait for cluster to sync
   shell: >
     curl --head --silent
-    "http://{{ mysql_bind_address ~ ':' ~ mysql_clustercheck_port }}/"
+    "http://{{ mysql_bind_address | ipwrap ~ ':' ~ mysql_clustercheck_port }}/"
   register: mysql_restart_sync_result
   until: mysql_restart_sync_result.stdout.find("200 OK") != -1
   retries: "{{ mysql_sync_retries }}"
