@@ -23,7 +23,7 @@
   become: yes
   zypper:
     name: "{{ item }}"
-    state: latest
+    state: present
   with_items:
     - mariadb
     - galera-3-wsrep-provider
