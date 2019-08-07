@@ -1,0 +1,12 @@
+# The MySQL database server configuration file: SSL specific bits.
+
+[mysqld]
+{% if mysql_admin_bind_tls | bool %}
+ssl-cert = {{ mysql_server_cert }}
+ssl-key = {{ mysql_server_key }}
+ssl-ca = {{ mysql_ca_certs }}
+{% endif %}
+
+[client]
+port = {{ mysql_client_port }}
+ssl-ca = {{ mysql_ca_certs }}

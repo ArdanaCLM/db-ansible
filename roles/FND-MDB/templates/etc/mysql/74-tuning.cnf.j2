@@ -1,0 +1,16 @@
+[mysqld]
+innodb_buffer_pool_size = {{ innodb_buffer_pool_size }}M
+innodb_log_file_size = {{ [8, innodb_buffer_pool_size / 4] | max | int }}M
+innodb_buffer_pool_instances = {{ innodb_buffer_pool_instances }}
+
+innodb_flush_method = {{ innodb_flush_method }}
+
+# 0 should bring better performance but has slight risk of losing some logs
+innodb_flush_log_at_trx_commit = {{ innodb_flush_log_at_trx_commit }}
+innodb_flush_log_at_timeout = {{ innodb_flush_log_at_timeout }}
+
+max_connections = {{ mysql_max_connections }}
+tmp_table_size = {{ mysql_tmp_table_size }}M
+max_heap_table_size = {{ mysql_max_heap_table_size }}M
+
+skip_name_resolve = 1

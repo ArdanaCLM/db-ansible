@@ -1,0 +1,64 @@
+{% set cluster_addresses = [] %}
+{%- for h in mysql_mdb_servers %}
+    {%- set _ = cluster_addresses.append(h.host) -%}
+{% endfor -%}
+[mysqld]
+wsrep_on = ON
+wsrep_provider = {{ mysql_wsrep_provider }}
+wsrep_cluster_address = gcomm://{{ ",".join(cluster_addresses) }}
+# values recommended by mysqltuner.pl
+{% if mysql_gmcast_ip_is_v6|bool %}
+{%   set wsrep_provider_options_listen = "gmcast.listen_addr=tcp://[::]:4567; ist.recv_addr=[" ~ mysql_wsrep_node_address ~ "]:4568" %}
+{% else %}
+{%   set wsrep_provider_options_listen = "gmcast.listen_addr=tcp://" ~ mysql_gmcast_ip ~ ":" ~ mysql_gmcast_port %}
+{% endif %}
+{% if mysql_gcomms_bind_tls | bool %}
+{%   set wsrep_provider_options_listen = wsrep_provider_options_listen ~ ';' ~ mysql_provider_options_tls_bind %}
+{% endif %}
+wsrep_provider_options = "{{ wsrep_provider_options_listen }};gcs.fc_limit = {{ mysql_wsrep_slave_threads * mysql_gcs_fc_limit_multiplier }};gcs.fc_factor = {{ mysql_gcs_fc_factor }}"
+
+wsrep_slave_threads = {{ mysql_wsrep_slave_threads }}
+wsrep_cluster_name = {{ mysql_wsrep_cluster_name }}
+wsrep_node_address = {{ mysql_wsrep_node_address | ipwrap }}:4567
+
+# Maximum number of rows in write set
+# "0" (unlimited) is the upstream default, but the default configuration in the
+# rpm package overwrites that
+wsrep_max_ws_rows=0
+
+# Maximum size of write set
+# "2147483647" (2GB) is the upstream default, but the default configuration in
+# the rpm package overwrites that
+wsrep_max_ws_size=2147483647
+
+# to enable debug level logging, set this to 1
+wsrep_debug = 0
+
+binlog_format = {{ mysql_binlog_format }}
+default_storage_engine = {{ mysql_default_storage_engine }}
+
+innodb_autoinc_lock_mode = {{ mysql_innodb_autoinc_lock_mode }}
+innodb_doublewrite = 1
+
+# Disable Query Cache completely
+query_cache_size = 0
+query_cache_type = 0
+
+expire_logs_days = 10
+
+# SST method
+wsrep_sst_method = {{ mysql_wsrep_sst_method }}
+wsrep_sst_auth = {{ mysql_wsrep_sst_auth }}
+wsrep_sst_receive_address = {{ mysql_wsrep_node_address | ipwrap }}:4444
+
+[sst]
+{% if mysql_gmcast_ip_is_v6|bool %}
+sockopt=,pf=ip6
+{% endif %}
+inno-backup-opts="--skip-ssl"
+{% if mysql_sst_bind_tls | bool %}
+# TLS sst listener
+encrypt = 3
+tkey = {{ mysql_sst_key }}
+tcert = {{ mysql_sst_cert}}
+{% endif %}

@@ -21,11 +21,11 @@
 - name: FND-MDB | restart_master | Restore wsrep_cluster_address
   become: yes
   template:
-    src: etc/mysql/my.cnf.j2
+    src: etc/mysql/75-galera.cnf.j2
     dest: "{{ mysql_conf_file }}"
     owner: mysql
     group: mysql
-    mode: 0600
+    mode: 0640
     force: yes
   run_once_per: verb_hosts.FND_MDB
   when: ansible_os_family == 'Suse' and mysql_mdb_cluster_size | int  > 1

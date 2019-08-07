@@ -1,0 +1,10 @@
+# The MySQL database server configuration file.
+
+[mysqld]
+user                   = {{ mysql_user }}
+datadir                = {{ mysql_datadir }}
+tmpdir                 = {{ mysql_tmpdir }}
+
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = {{ mysql_bind_address }}

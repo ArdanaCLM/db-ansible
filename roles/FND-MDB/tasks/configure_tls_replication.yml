@@ -18,11 +18,11 @@
 - include: _configure_tls.yml
   when: mysql_bind_tls | bool
 
-- name: FND-MDB | configure_tls_replication | Copy my.cnf
+- name: FND-MDB | configure_tls_replication | Copy 73-ssl.cnf
   become: yes
   template:
-    src: etc/mysql/my.cnf.j2
-    dest: "{{ mysql_conf_file }}"
+    src: etc/mysql/73-ssl.cnf.j2
+    dest: "{{ mysql_ssl_conf_file }}"
     owner: mysql
     group: mysql
-    mode: 0600
+    mode: 0640

@@ -62,11 +62,17 @@ mysql_init_connect: 'SET NAMES utf8'
 mysql_character_set_server: utf8
 mysql_wsrep_provider: /usr/lib/libgalera_smm.so
 mysql_binlog_format: ROW
+mysql_max_connections: 2048
+mysql_tmp_table_size: 64
+mysql_max_heap_table_size: 64
+mysql_slow_query_logging_enabled: True
 mysql_default_storage_engine: InnoDB
 # This changes how InnoDB autoincrement locks are managed and is a requirement for Galera
 mysql_innodb_autoinc_lock_mode: 2
 
-innodb_flush_method: fsync
+innodb_flush_method: O_DIRECT
+innodb_buffer_pool_size: 256
+innodb_buffer_pool_instances: 1
 # 0 should bring better performance but has slight risk of losing some logs
 innodb_flush_log_at_trx_commit: 1
 innodb_flush_log_at_timeout: 1
@@ -79,6 +85,10 @@ mysql_server_id: "{{ ( FND_MDB.vars.mysql_cluster_name ~ host.vars.member_id ) |
 mysql_wsrep_node_address: "{{ host.bind['FND_MDB'].admin.ip_address }}"
 mysql_gmcast_ip: "{{ host.bind['FND_MDB'].mysql_gcomms.ip_address }}"
 mysql_gmcast_port: "{{ host.bind['FND_MDB'].mysql_gcomms.port }}"
+mysql_gcs_fc_factor: 0.8
+mysql_gcs_fc_limit_multiplier: 5
+mysql_wsrep_slave_threads: 1
+mysql_provider_options_tls_bind: "socket.ssl_key={{ mysql_gcomms_key }};socket.ssl_cert={{ mysql_gcomms_cert }};socket.ssl_ca={{ mysql_ca_certs }}"
 
 # Note: ipv6 filter returns IPv6 address in case it is valid else False
 mysql_gmcast_ip_is_v6: "{{ mysql_gmcast_ip | ipv6 == mysql_gmcast_ip | ipaddr }}"
@@ -102,8 +112,8 @@ mysql_databases: "[ {% for component in mysql_consumed_by -%} {% if component.va
 
 # Certs, CA and deploys
 mysql_tls_certs_dir: "/tmp/ardana_tls_certs"
-mysql_ca_certs: "{{ trusted_ca_bundle }} "
-mysql_cert_deploy_dir: "/etc/mysql/"
+mysql_ca_certs: "{{ trusted_ca_bundle }}"
+mysql_cert_deploy_dir: "/etc/mysql"
 
 # TLS flags
 mysql_admin_bind_tls: "{{ host.bind['FND_MDB'].admin.tls }}"

@@ -143,14 +143,14 @@
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
 
-- name: FND-MDB | galera_bootstrap | Re-copy my.cnf
+- name: FND-MDB | galera_bootstrap | Re-copy 75-galera.cnf
   become: yes
   template:
-    src: etc/mysql/my.cnf.j2
+    src: etc/mysql/75-galera.cnf.j2
     dest: "{{ mysql_conf_file }}"
     owner: mysql
     group: mysql
-    mode: 0600
+    mode: 0640
     force: yes
   when:
     inventory_hostname in "{{ find_bootstrap_host_result.hosts_to_start }}"
@@ -171,11 +171,11 @@
 - name: FND-MDB | galera_bootstrap | Restore wsrep_cluster_address on master
   become: yes
   template:
-    src: etc/mysql/my.cnf.j2
+    src: etc/mysql/75-galera.cnf.j2
     dest: "{{ mysql_conf_file }}"
     owner: mysql
     group: mysql
-    mode: 0600
+    mode: 0640
     force: yes
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"

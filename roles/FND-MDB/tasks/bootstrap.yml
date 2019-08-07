@@ -23,7 +23,6 @@
     dest: "{{ mysql_conf_file }}"
     regexp: '^wsrep_cluster_address = gcomm.*'
     replace: 'wsrep_cluster_address = gcomm://'
-    backup: yes
   when: ansible_os_family == 'Suse'
   run_once_per: verb_hosts.FND_MDB
 

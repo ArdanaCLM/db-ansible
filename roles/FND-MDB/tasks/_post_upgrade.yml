@@ -29,6 +29,15 @@
 - name: FND-MDB | _post_upgrade | configure mysqlchk
   include: configure_mysqlchk.yml
 
+- name: FND-MDB | _post_upgrade | Ensure deprecated configs removed
+  become: yes
+  file:
+    path: "{{ mysql_conf_file | dirname }}/{{ item }}.cnf"
+    state: absent
+  with_items:
+    - "client"
+    - "server"
+
 - name: FND-MDB | _post_upgrade| Enable MDB services
   become: yes
   service:
