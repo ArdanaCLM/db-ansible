@@ -1,0 +1,65 @@
+#
+# (c) Copyright 2019 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+
+- hosts: FND-MDB
+  max_fail_percentage: 0
+  roles:
+    - FND-MDB
+  tasks:
+    - name: galera-upgrade | Determine if running for all FND-MDB hosts
+      set_fact:
+        running_for_all_mdb_hosts: >-
+          {{ (mysql_mdb_hosts | length) == (play_hosts | length) }}
+        running_for_single_node: >
+          {{ (play_hosts | length) == 1 }}
+
+    - fail:
+        msg: |
+          This playbook should be run either for all FND-MDB hosts, or for
+          just a single FND-MDB host using the --limit option; running for
+          more than one node, but less that the complete set of nodes is
+          not permitted.
+      when:
+        - not (running_for_all_mdb_hosts | bool)
+        - not (running_for_single_node | bool)
+
+    # Ensure any additional packages are installed
+    - include: roles/FND-MDB/tasks/check_install.yml
+    - include: roles/FND-MDB/tasks/_suse_install.yml
+
+    # If running against all nodes in the FND-MDB host group, as will
+    # be the case when running under the upgrade workflow, we can use
+    # the galera_bootstrap.yml task list which configures and (re)starts
+    # the MariaDB/Galera cluster instances on all nodes
+    - include: roles/FND-MDB/tasks/galera_bootstrap.yml
+      when:
+        - running_for_all_mdb_hosts | bool
+
+    # Otherwise if running against only a subset of the nodes, which
+    # is the case when called during the update workflow when limited
+    # to a single node, we need to use the configure and start task
+    # lists to update the config and (re)start the services as needed.
+    - include: roles/FND-MDB/tasks/configure.yml
+      when:
+        - running_for_single_node | bool
+    - include: roles/FND-MDB/tasks/start.yml
+      when:
+        - running_for_single_node | bool
+
+    - include: roles/FND-MDB/tasks/status.yml
+
+- include: percona-configure-monasca.yml

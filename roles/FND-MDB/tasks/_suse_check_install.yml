@@ -26,7 +26,7 @@
     zypper se --type package --details --match-exact
     {{ mariadb_server_package }} 2>/dev/null |
     grep {{ mariadb_server_package }} | sed 's/^[^|]*|//' |
-    awk '/{{ mariadb_server_package }}/{print $5}' | sort -nr
+    awk '/{{ mariadb_server_package }}/{print $5}' | sort -r --version-sort
   register: avail_versions_result
 
 - name: FND-MDB | _suse_check_install | Find version installed
@@ -35,7 +35,7 @@
     zypper se --type package --details --match-exact --installed-only
     {{ mariadb_server_package }} 2>/dev/null |
     awk -F" *\\\| *" '/{{ mariadb_server_package }}/{NR==1;print $4}' |
-    sort -nr
+    sort -r --version-sort
   register: installed_versions_result
 
 - name: FND-MDB | _suse_check_install | Get latest available version
@@ -64,7 +64,7 @@
   when: mariadb_latest_installed_version is defined
 
 # Bool will still be needed on a when to check this. We also remove
-# the revision suffix, to differenciate mayor upgrades (10.2.13 to
+# the revision suffix, to differenciate major upgrades (10.2.13 to
 # 10.2.14) from minor upgrades (10.2.13-4.4 to 10.2.13-4.5)
 - name: FND-MDB | _suse_check_install | Check if this could be a major upgrade
   set_fact:

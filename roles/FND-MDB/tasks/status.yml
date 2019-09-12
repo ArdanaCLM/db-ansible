@@ -45,9 +45,9 @@
       {{ systemctl_status_result.stderr }}
   when: systemctl_status_result | failed
 
-# Check percona sync status,
+# Check galera sync status,
 # for now do not actually fail if we are not synced/ignore errors
-- name: FND-MDB | status | Check percona sync status
+- name: FND-MDB | status | Check galera sync status
   shell: >
     curl --head --silent
     "http://{{ mysql_bind_address | ipwrap }}:{{ mysql_clustercheck_port }}/"

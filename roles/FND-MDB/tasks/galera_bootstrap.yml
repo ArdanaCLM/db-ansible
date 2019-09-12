@@ -65,9 +65,26 @@
     awk '{print $2}'
   register: seqno_result
 
+- name: FND-MDB | galera_bootstrap | Collect together required attrs
+  set_fact:
+    galera_bootstrap_info:
+      mysql_process_status_result: "{{ mysql_process_status_result }}"
+      mysql_service_status_result: "{{ mysql_service_status_result }}"
+      recovered_position_result: "{{ recovered_position_result }}"
+      safe_to_bootstrap_result: "{{ safe_to_bootstrap_result }}"
+      seqno_result: "{{ seqno_result }}"
+
 - name: FND-MDB | galera_bootstrap | Find bootstrap host
   find_galera_mariadb_bootstrap_host:
-    hostvars: "{{ hostvars }}"
+    # SOC-10521 - collate the collected information into a "fake" hostvars
+    # that doesn't trip ansible undefined attrs when used as part of the
+    # ardana-upgrade.yml playbook
+    hostvars: >-
+      {%- set _gmbh_list = [] -%}
+      {%- for h in mysql_mdb_hosts -%}
+      {%-   set _ = _gmbh_list.append((h, hostvars[h].galera_bootstrap_info)) -%}
+      {%- endfor -%}
+      {{- dict(_gmbh_list) -}}
     mdb_hosts: "{{ mysql_mdb_hosts }}"
   register: find_bootstrap_host_result
 
