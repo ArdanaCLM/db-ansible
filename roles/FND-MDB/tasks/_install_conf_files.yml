@@ -1,0 +1,40 @@
+#
+# (c) Copyright 2020 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: FND-MDB | _install_conf_files | Copy Galera/Maria config
+  become: yes
+  template:
+    src: "etc/mysql/{{ item }}.cnf.j2"
+    dest: "{{ mysql_conf_file | dirname }}/{{ item }}.cnf"
+    owner: mysql
+    group: mysql
+    mode: 0640
+  register: ardana_notify_mysql_restart_required
+  with_items:
+    - "71-logging"
+    - "72-openstack"
+    - "73-ssl"
+    - "74-tuning"
+    - "75-galera"
+
+- name: FND-MDB | _install_conf_files | Ensure deprecated configs removed
+  become: yes
+  file:
+    path: "{{ mysql_conf_file | dirname }}/{{ item }}.cnf"
+    state: absent
+  with_items:
+    - "client"
+    - "server"

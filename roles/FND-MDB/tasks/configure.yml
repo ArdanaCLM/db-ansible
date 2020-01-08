@@ -24,21 +24,8 @@
 - include: _configure_tls.yml
   when: mysql_bind_tls | bool
 
-- name: FND-MDB | configure | Copy Galera/Maria config
-  become: yes
-  template:
-    src: "etc/mysql/{{ item }}.cnf.j2"
-    dest: "{{ mysql_conf_file | dirname }}/{{ item }}.cnf"
-    owner: mysql
-    group: mysql
-    mode: 0640
-  register: ardana_notify_mysql_restart_required
-  with_items:
-    - "71-logging"
-    - "72-openstack"
-    - "73-ssl"
-    - "74-tuning"
-    - "75-galera"
+- name: FND-MDB | configure | Install conf files
+  include: _install_conf_files.yml
 
 - name: FND-MDB | configure | Check initialised
   become: yes
