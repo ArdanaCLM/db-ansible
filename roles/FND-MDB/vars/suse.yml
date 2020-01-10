@@ -20,6 +20,7 @@ mysql_binary: /usr/sbin/mysqld
 mysql_safe_binary: /usr/bin/mysqld_safe
 
 mysql_conf_file: /etc/my.cnf.d/75-galera.cnf
+mysql_override_conf_file: /etc/my.cnf.d/zzz-bootstrap-override.cnf
 mysql_ssl_conf_file: /etc/my.cnf.d/73-ssl.cnf
 mysql_pid_file: /run/mysql/mysqld.pid
 mysql_socket: /run/mysql/mysql.sock

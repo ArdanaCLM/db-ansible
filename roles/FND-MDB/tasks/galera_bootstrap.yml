@@ -105,10 +105,11 @@
 
 - name: FND-MDB | galera_bootstrap | Set wsrep_cluster_address on master
   become: yes
-  replace:
-    dest: "{{ mysql_conf_file }}"
-    regexp: '^wsrep_cluster_address = gcomm.*'
-    replace: 'wsrep_cluster_address = gcomm://'
+  copy:
+    dest: "{{ mysql_override_conf_file }}"
+    content: |-
+      [mysqld]
+      wsrep_cluster_address = gcomm://
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
 
@@ -145,8 +146,6 @@
 
 - name: FND-MDB | galera_bootstrap | Re-copy 75-galera.cnf
   include: _install_conf_files.yml
-  when:
-    inventory_hostname in "{{ find_bootstrap_host_result.hosts_to_start }}"
 
 - name: FND-MDB | galera_bootstrap | Start mysql on master
   include: galera_start_on_hosts.yml
@@ -162,7 +161,10 @@
     mysql_hosts_to_start: "{{ find_bootstrap_host_result.hosts_to_start }}"
 
 - name: FND-MDB | galera_bootstrap | Restore wsrep_cluster_address on master
-  include: _install_conf_files.yml
+  become: yes
+  file:
+    path: "{{ mysql_override_conf_file }}"
+    state: absent
   when:
     inventory_hostname == "{{ find_bootstrap_host_result.bootstrap_host }}"
 
