@@ -125,6 +125,8 @@ mysql_gcomms_cert: "{{ mysql_server_cert }}"
 mysql_gcomms_key: "{{ mysql_server_key }}"
 mysql_sst_cert:  "{{ mysql_server_cert }}"
 mysql_sst_key: "{{ mysql_server_key }}"
+# certificate only, for monitoring purpose
+mysql_server_cert_monitoring: "{{ mysql_cert_deploy_dir }}/{{ mysql_server_cert_name }}-monitoring.pem"
 
 mysql_tls_expiry_check: "2592000" #30 days
 mysql_certs_needs_regeneration: False
