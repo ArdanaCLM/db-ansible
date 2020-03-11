@@ -41,3 +41,11 @@
     - FND-MDB
   tasks:
     - include: roles/FND-MDB/tasks/status.yml
+
+- hosts: FND-MDB:&MON-AGN
+  max_fail_percentage: 0
+  roles:
+    - FND-MDB
+    - FND-MDB-monasca
+  tasks:
+    - include: roles/FND-MDB-monasca/tasks/configure_tls.yml

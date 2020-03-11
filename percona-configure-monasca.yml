@@ -21,3 +21,13 @@
     - FND-MDB-monasca
   tasks:
     - include: roles/FND-MDB-monasca/tasks/configure.yml
+
+- hosts: FND-MDB:&MON-AGN
+  max_fail_percentage: 0
+  roles:
+    - FND-MDB
+    - FND-MDB-monasca
+  tasks:
+    - name: percona-configure-monasca | include configure_tls
+      include: roles/FND-MDB-monasca/tasks/configure_tls.yml
+      when: mysql_bind_tls | bool
