@@ -154,7 +154,10 @@ def find_hosts_where_mysql_still_running(hostvars, hosts):
                 if seqno != -1:
                     raise Exception('Mysql appeared to be running on host %s, '
                                     'but the sequence number is not -1 as '
-                                    'expected.', host)
+                                    'expected. Please check the logs on the '
+                                    'node for possible errors related to SST. '
+                                    'Manually restarting the MySQL process on '
+                                    'the node may be required.'  % (host))
                 alive_hosts.append(host)
             else:
                 # We have a FUBAR situation here. Systemd is reporting that
@@ -162,7 +165,7 @@ def find_hosts_where_mysql_still_running(hostvars, hosts):
                 # Human intervention is required.
                 raise Exception('Systemd on host %s indicating mysql service '
                                 'still alive. But the process mysqld is not '
-                                'found.', host)
+                                'found.' % (host))
     return alive_hosts
 
 
@@ -188,7 +191,7 @@ def find_latest_recovered_position(hostvars, hosts):
             # the crash, that means we have a FUBAR situation which required
             # menual recovery.
             raise Exception('Unable to find the recovered positon on host %s. '
-                            'Manual recovery is required.', host)
+                            'Manual recovery is required.' % (host))
     return (host_with_highest_seqno, highest_uuid, highest_seqno)
 
 
@@ -266,8 +269,8 @@ def run_module():
                     result['recovered_seqno'] = seqno
             result['hosts_to_start'] = list(
                 set(hosts) - set([result['bootstrap_host']]))
-    except Exception, e:
-        module.fail_json(msg=e.message)
+    except Exception as e:
+        module.fail_json(msg=str(e))
     else:
         module.exit_json(**result)
 
