@@ -14,6 +14,13 @@
 # under the License.
 #
 ---
+- name: FND-MDB | galera_bootstrap | Check TLS server certificate expiry
+  include: check_tls_cert_expiry.yml
+  vars:
+    cert_type: server
+    cert_to_check: "{{ mysql_server_cert }}"
+  when: mysql_bind_tls | bool
+
 - name: FND-MDB | galera_bootstrap | Check mysql status
   become: yes
   shell: >

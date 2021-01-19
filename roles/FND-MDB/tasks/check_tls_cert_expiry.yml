@@ -1,0 +1,53 @@
+#
+# (c) Copyright 2021 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: FND-MDB | check_tls_cert_expiry |
+        Get {{ cert_type }} certificate end date in GMT
+  become: yes
+  shell: |
+    openssl x509 -in {{ cert_to_check }} -enddate -noout | sed -e 's#notAfter=##'
+  register: get_cert_enddate_gmt_result
+
+- name: FND-MDB | check_tls_cert_expiry |
+        Get {{ cert_type }} certificate end date in epoch
+  command:
+    date -d "{{ get_cert_enddate_gmt_result.stdout }}" +%s
+  register: get_cert_enddate_epoch_result
+
+- name: FND-MDB | check_tls_cert_expiry |
+        {{ cert_type }} certificate has expired
+  fail:
+    msg: >
+      ERROR: {{ cert_type }} certificate {{ cert_to_check }} has expired.
+      Please run tls_reconfigure.yml playbook to renew the expired
+      TLS certificates immediately.
+  when: ansible_date_time.epoch|int > get_cert_enddate_epoch_result.stdout|int
+
+- name: FND-MDB | check_tls_cert_expiry |
+        Set {{ cert_type }} certificate time-to-live
+  set_fact:
+    cert_ttl_in_seconds: "{{ get_cert_enddate_epoch_result.stdout|int - ansible_date_time.epoch|int }}"
+
+- name: FND-MDB | check_tls_cert_expiry |
+        {{ cert_type }} certificate expiring soon
+  debug:
+    msg: >
+      WARNING: {{ cert_type }} certificate {{ cert_to_check }} will be expiring
+      in {{ get_cert_enddate_gmt_result.stdout }},
+      approximately {{ (cert_ttl_in_seconds|int / 3600)|round }} hours from now.
+      Please run tls_reconfigure.yml playbook to renew the expired
+      certificates as soon as possible.
+  when: cert_ttl_in_seconds|int < tls_cert_ttl_threshold|int

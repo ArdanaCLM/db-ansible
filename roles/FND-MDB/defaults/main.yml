@@ -151,3 +151,10 @@ mysql_galera_bootstrap_command: "/etc/init.d/mysql restart-bootstrap"
 mysql_xinetd_mysqlchk_user: nobody
 
 mysql_open_files_limit: 65536
+
+# threshold (in seconds) to warn the user when the server certificate is about
+# to expire. In other words, if the server certficate time to live falls below
+# the given value, a warning message will be emitted to warn the user that
+# the server certifcate is about to expire.
+# Default value is 1 week (604800 seconds)
+tls_cert_ttl_threshold: 604800
